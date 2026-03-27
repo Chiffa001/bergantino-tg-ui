@@ -12,4 +12,12 @@ export default defineConfig({
       '@': path.resolve(import.meta.dirname, 'src'),
     },
   },
+  server: {
+    fs: {
+      allow: [
+        path.resolve(import.meta.dirname),
+        path.resolve(import.meta.dirname, '../../tg-svelte-ui'),
+      ],
+    },
+  },
 });

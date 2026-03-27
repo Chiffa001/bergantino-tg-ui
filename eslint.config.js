@@ -26,6 +26,7 @@ export default defineConfig(
       'simple-import-sort': simpleImportSort,
     },
     rules: {
+      'object-curly-spacing': ['error', 'always'],
       'semi': ['error', 'always'],
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
@@ -35,9 +36,7 @@ export default defineConfig(
     files: ['**/*.ts'],
     languageOptions: {
       parserOptions: {
-        projectService: {
-          allowDefaultProject: ['eslint.config.js', 'svelte.config.js'],
-        },
+        project: ['./tsconfig.eslint.json'],
         tsconfigRootDir: import.meta.dirname,
       },
     },
@@ -55,6 +54,7 @@ export default defineConfig(
     files: ['**/*.svelte', '**/*.svelte.ts'],
     languageOptions: {
       parserOptions: {
+        project: null,
         projectService: {
           allowDefaultProject: ['eslint.config.js', 'svelte.config.js'],
         },
@@ -70,6 +70,33 @@ export default defineConfig(
         {
           prefer: 'type-imports',
           fixStyle: 'separate-type-imports',
+        },
+      ],
+      'svelte/first-attribute-linebreak': [
+        'error',
+        {
+          multiline: 'below',
+          singleline: 'beside',
+        },
+      ],
+      'svelte/html-closing-bracket-new-line': [
+        'error',
+        {
+          multiline: 'always',
+          singleline: 'never',
+        },
+      ],
+      'svelte/max-attributes-per-line': [
+        'error',
+        {
+          multiline: 1,
+          singleline: 1,
+        },
+      ],
+      'svelte/indent': [
+        'error',
+        {
+          indent: 2,
         },
       ],
     },
