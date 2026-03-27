@@ -2,6 +2,7 @@
   import { Route, Switch } from '@chiffa001/tg-svelte-ui/router';
 
   import HomePage from '@/pages/home-page.svelte';
+  import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
 </script>
 
@@ -21,6 +22,6 @@
   </Route>
 
   <Route path="*">
-    <NotInTelegramPage />
+    <NotFoundPage />
   </Route>
 </Switch>
