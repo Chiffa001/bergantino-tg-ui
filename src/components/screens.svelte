@@ -2,6 +2,7 @@
   import { Route, Switch } from '@chiffa001/tg-svelte-ui/router';
 
   import HomePage from '@/pages/home-page.svelte';
+  import InternalServerErrorPage from '@/pages/internal-server-error-page.svelte';
   import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
 </script>
@@ -19,6 +20,13 @@
     exact
   >
     <HomePage />
+  </Route>
+
+  <Route
+    path="/internal-server-error"
+    exact
+  >
+    <InternalServerErrorPage />
   </Route>
 
   <Route path="*">
