@@ -1,9 +1,20 @@
 <script lang="ts">
   import { Typography } from '@chiffa001/tg-svelte-ui';
 
+  import Button from '@/components/ui/button.svelte';
   import TgIcon from '@/icons/tg-icon.svelte';
 
+  let isRedirecting = false;
   const botUrl = import.meta.env.VITE_BOT_URL?.trim();
+
+  const handleTelegramRedirect = (e: MouseEvent) => {
+    if (isRedirecting) {
+      e.preventDefault();
+      return;
+    }
+
+    isRedirecting = true;
+  };
 </script>
 
 <section class="not-in-telegram-page">
@@ -32,12 +43,15 @@
     </div>
 
     {#if botUrl}
-      <a
-        class="action"
-        href={botUrl}
-      >
-        Открыть Telegram
-      </a>
+      <div class="action-wrapper">
+        <Button
+          href={botUrl}
+          loading={isRedirecting}
+          onclick={handleTelegramRedirect}
+        >
+          Открыть Telegram
+        </Button>
+      </div>
     {/if}
   </div>
 </section>
@@ -71,32 +85,8 @@
     margin: 12px 0 0;
   }
 
-  .action {
-    display: inline-flex;
-    min-height: 52px;
+  .action-wrapper {
+    margin-top: 20px;
     width: 100%;
-    align-items: center;
-    justify-content: center;
-    margin-top: 28px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #63eaf3 0%, #6c4efe 100%);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1;
-    text-decoration: none;
-    transition:
-      transform 160ms ease,
-      opacity 160ms ease;
-  }
-
-  .action:hover {
-    transform: translateY(-1px);
-    opacity: 0.9;
-  }
-
-  .action:active {
-    transform: translateY(0);
-    opacity: 0.8;
   }
 </style>
