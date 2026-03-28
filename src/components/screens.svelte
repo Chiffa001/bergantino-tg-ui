@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Route, Switch } from '@chiffa001/tg-svelte-ui/router';
 
+  import ForbiddenPage from '@/pages/forbidden-page.svelte';
   import HomePage from '@/pages/home-page.svelte';
   import InternalServerErrorPage from '@/pages/internal-server-error-page.svelte';
   import NotFoundPage from '@/pages/not-found-page.svelte';
@@ -20,6 +21,13 @@
     exact
   >
     <HomePage />
+  </Route>
+
+  <Route
+    path="/forbidden"
+    exact
+  >
+    <ForbiddenPage />
   </Route>
 
   <Route
