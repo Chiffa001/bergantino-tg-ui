@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Route, Switch } from '@chiffa001/tg-svelte-ui/router';
 
+  import CreateWorkspacePage from '@/pages/create-workspace-page.svelte';
   import ForbiddenPage from '@/pages/forbidden-page.svelte';
   import InternalServerErrorPage from '@/pages/internal-server-error-page.svelte';
   import NotFoundPage from '@/pages/not-found-page.svelte';
@@ -21,6 +22,13 @@
     exact
   >
     <WorkspacesPage />
+  </Route>
+
+  <Route
+    path="/workspaces/new"
+    exact
+  >
+    <CreateWorkspacePage />
   </Route>
 
   <Route

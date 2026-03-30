@@ -2,7 +2,7 @@
   import { Typography } from '@chiffa001/tg-svelte-ui';
 
   import { createWorkspacesQuery } from '@/api/workspaces/queries';
-  import type { WorkspacePlan, WorkspaceStatus } from '@/api/workspaces/types';
+  import { WORKSPACE_PLAN, type WorkspacePlan, type WorkspaceStatus } from '@/api/workspaces/types';
   import Button from '@/components/ui/button.svelte';
   import { router } from '@/lib/router';
 
@@ -32,10 +32,10 @@
   };
 
   const planLabel: Record<WorkspacePlan, string> = {
-    free: 'Free',
-    basic: 'Basic',
-    pro: 'Pro',
-    business: 'Business',
+    [WORKSPACE_PLAN.FREE]: 'Free',
+    [WORKSPACE_PLAN.BASIC]: 'Basic',
+    [WORKSPACE_PLAN.PRO]: 'Pro',
+    [WORKSPACE_PLAN.BUSINESS]: 'Business',
   };
 
   function formatDate(iso: string): string {

@@ -24,3 +24,17 @@ export const apiFetch = (path: string, init?: RequestInit) => {
     headers,
   });
 };
+
+export const requestJson = async <T>(path: string, init?: RequestInit): Promise<T> => {
+  const res = await apiFetch(path, init);
+
+  if (res.status >= 400 && res.status < 500) {
+    throw new Error('client_error');
+  }
+
+  if (!res.ok) {
+    throw new Error('server_error');
+  }
+
+  return res.json() as Promise<T>;
+};

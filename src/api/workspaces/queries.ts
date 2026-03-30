@@ -1,6 +1,8 @@
-import { createQuery } from '@tanstack/svelte-query';
+import { createMutation, createQuery } from '@tanstack/svelte-query';
 
-import { getWorkspaces } from './requests';
+import { queryClient } from '@/lib/query-client';
+
+import { createWorkspace, getWorkspaces } from './requests';
 
 export const workspacesQueryKey = ['workspaces'] as const;
 
@@ -9,4 +11,12 @@ export const createWorkspacesQuery = () =>
     queryFn: getWorkspaces,
     queryKey: workspacesQueryKey,
     staleTime: 30_000,
+  }));
+
+export const createWorkspaceMutation = () =>
+  createMutation(() => ({
+    mutationFn: createWorkspace,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workspacesQueryKey });
+    },
   }));

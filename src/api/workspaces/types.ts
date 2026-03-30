@@ -1,6 +1,13 @@
 export type WorkspaceStatus = 'active' | 'suspended' | 'archived';
 
-export type WorkspacePlan = 'free' | 'basic' | 'pro' | 'business';
+export const WORKSPACE_PLAN = {
+  FREE: 'free',
+  BASIC: 'basic',
+  PRO: 'pro',
+  BUSINESS: 'business',
+} as const;
+
+export type WorkspacePlan = (typeof WORKSPACE_PLAN)[keyof typeof WORKSPACE_PLAN];
 
 // Соответствует WorkspaceOut из API (GET /workspaces)
 export type Workspace = {
@@ -22,4 +29,10 @@ export type WorkspaceMembersCount = {
 export type WorkspaceDetail = Workspace & {
   fee_rate: string;
   members_count: WorkspaceMembersCount;
+};
+
+export type CreateWorkspaceRequest = {
+  title: string;
+  slug: string;
+  plan: WorkspacePlan;
 };
