@@ -6,6 +6,7 @@
 
   type Props = {
     variant?: Variant;
+    class?: string;
     disabled?: boolean;
     loading?: boolean;
     type?: 'button' | 'submit' | 'reset';
@@ -18,6 +19,7 @@
 
   let {
     variant = 'default',
+    class: className = '',
     disabled = false,
     loading = false,
     type = 'button',
@@ -37,7 +39,7 @@
     {href}
     {target}
     rel={rel ?? (target === '_blank' ? 'noreferrer' : undefined)}
-    class="btn btn--{variant}"
+    class={`btn btn--${variant} ${className}`.trim()}
     class:btn--loading={loading}
     aria-disabled={isDisabled}
     tabindex={isDisabled ? -1 : undefined}
@@ -70,7 +72,7 @@
   <button
     {type}
     disabled={isDisabled}
-    class="btn btn--{variant}"
+    class={`btn btn--${variant} ${className}`.trim()}
     class:btn--loading={loading}
     {onclick}
   >

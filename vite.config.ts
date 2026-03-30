@@ -1,12 +1,12 @@
 import path from 'node:path';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 import { defineConfig } from 'vite';
+import mkcert from 'vite-plugin-mkcert';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [svelte(), basicSsl()],
+  plugins: [svelte(), mkcert()],
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, 'src'),

@@ -2,10 +2,10 @@
   import { Route, Switch } from '@chiffa001/tg-svelte-ui/router';
 
   import ForbiddenPage from '@/pages/forbidden-page.svelte';
-  import HomePage from '@/pages/home-page.svelte';
   import InternalServerErrorPage from '@/pages/internal-server-error-page.svelte';
   import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
+  import WorkspacesPage from '@/pages/workspaces-page.svelte';
 </script>
 
 <Switch>
@@ -20,7 +20,7 @@
     path="/"
     exact
   >
-    <HomePage />
+    <WorkspacesPage />
   </Route>
 
   <Route

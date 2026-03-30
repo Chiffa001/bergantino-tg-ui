@@ -8,12 +8,18 @@
   import { router } from '@/lib/router';
   import { setupTelegramSdk } from '@/lib/tma';
 
+  import AuthGuard from './auth-guard.svelte';
   import Screens from './screens.svelte';
 
   const { cleanup, isInTelegram } = setupTelegramSdk();
 
   if (!isInTelegram) {
     router.navigate('/not-in-telegram', { replace: true });
+  } else {
+    // TMA opens with Telegram params in the hash (#tgWebAppData=...),
+    // which the hash-mode router would misread as a non-matching path.
+    // Navigate to / so the router ignores the Telegram hash on start.
+    router.navigate('/');
   }
 
   onMount(() => {
@@ -28,7 +34,9 @@
   >
     <Router {router}>
       <main class="app-layout">
-        <Screens />
+        <AuthGuard {isInTelegram}>
+          <Screens />
+        </AuthGuard>
       </main>
     </Router>
   </PhoneMask>

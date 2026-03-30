@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   init: vi.fn(),
+  retrieveRawInitData: vi.fn(),
   sdkCleanup: vi.fn(),
   themeMount: vi.fn(),
   themeBindCssVars: vi.fn(),
@@ -33,23 +34,30 @@ vi.mock('@tma.js/sdk-svelte', () => ({
     mount: mocks.themeMount,
     unmount: mocks.themeUnmount,
   },
+  retrieveRawInitData: mocks.retrieveRawInitData,
   viewport: {
     bindCssVars: mocks.viewportBindCssVars,
     mount: mocks.viewportMount,
   },
 }));
 
-import { setupTelegramSdk } from '../tma';
+import { getTelegramHash, setupTelegramSdk } from '../tma';
 
 describe('setupTelegramSdk', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     mocks.init.mockReturnValue(mocks.sdkCleanup);
+    mocks.retrieveRawInitData.mockReturnValue('tg-hash');
     mocks.themeBindCssVars.mockReturnValue(mocks.themeCssCleanup);
     mocks.miniAppBindCssVars.mockReturnValue(mocks.miniAppCssCleanup);
     mocks.viewportBindCssVars.mockReturnValue(mocks.viewportCssCleanup);
     mocks.miniAppReadyIsAvailable.mockReturnValue(true);
+  });
+
+  it('returns raw init data for tg hash header', () => {
+    expect(getTelegramHash()).toBe('tg-hash');
+    expect(mocks.retrieveRawInitData).toHaveBeenCalledOnce();
   });
 
   it('initializes sdk and tears it down in reverse order', () => {

@@ -1,4 +1,8 @@
-import { init, miniApp, themeParams, viewport } from '@tma.js/sdk-svelte';
+import { init, miniApp, retrieveRawInitData, themeParams, viewport } from '@tma.js/sdk-svelte';
+
+export function getTelegramHash(): string {
+  return retrieveRawInitData() ?? '';
+}
 
 export function setupTelegramSdk(): { cleanup: VoidFunction; isInTelegram: boolean } {
   try {
