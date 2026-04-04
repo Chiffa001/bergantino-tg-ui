@@ -2,7 +2,7 @@
   import { Typography } from '@chiffa001/tg-svelte-ui';
 
   import { createWorkspacesQuery } from '@/api/workspaces/queries';
-  import { WORKSPACE_PLAN, type WorkspacePlan, type WorkspaceStatus } from '@/api/workspaces/types';
+  import { WORKSPACE_PLAN_LABELS, WORKSPACE_STATUS_LABELS, type WorkspaceStatus } from '@/api/workspaces/types';
   import Button from '@/components/ui/button.svelte';
   import { router } from '@/lib/router';
 
@@ -24,19 +24,6 @@
       (ws) => activeFilter === 'all' || ws.status === activeFilter,
     ),
   );
-
-  const statusLabel: Record<WorkspaceStatus, string> = {
-    active: 'Active',
-    suspended: 'Suspended',
-    archived: 'Archived',
-  };
-
-  const planLabel: Record<WorkspacePlan, string> = {
-    [WORKSPACE_PLAN.FREE]: 'Free',
-    [WORKSPACE_PLAN.BASIC]: 'Basic',
-    [WORKSPACE_PLAN.PRO]: 'Pro',
-    [WORKSPACE_PLAN.BUSINESS]: 'Business',
-  };
 
   function formatDate(iso: string): string {
     return new Intl.DateTimeFormat('ru', { day: 'numeric', month: 'short', year: 'numeric' }).format(
@@ -154,7 +141,7 @@
                     variant="overline"
                     color="currentColor"
                   >
-                    {statusLabel[ws.status]}
+                    {WORKSPACE_STATUS_LABELS[ws.status]}
                   </Typography>
                 </span>
               </div>
@@ -173,7 +160,7 @@
                     variant="overline"
                     color="currentColor"
                   >
-                    {planLabel[ws.plan]}
+                    {WORKSPACE_PLAN_LABELS[ws.plan]}
                   </Typography>
                 </span>
 

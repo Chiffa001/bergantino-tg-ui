@@ -1,0 +1,595 @@
+<script lang="ts">
+  import { Typography } from '@chiffa001/tg-svelte-ui';
+
+  import { createWorkspaceDetailQuery } from '@/api/workspaces/queries';
+  import {
+    WORKSPACE_PLAN_LABELS,
+    WORKSPACE_STATUS_LABELS,
+    type WorkspaceDetail,
+  } from '@/api/workspaces/types';
+  import Button from '@/components/ui/button.svelte';
+  import RelatedList from '@/components/ui/related-list.svelte';
+  import ChevronLeftIcon from '@/icons/chevron-left-icon.svelte';
+  import ChevronRightIcon from '@/icons/chevron-right-icon.svelte';
+  import InviteUserIcon from '@/icons/invite-user-icon.svelte';
+  import PaymentCardIcon from '@/icons/payment-card-icon.svelte';
+  import SettingsGearIcon from '@/icons/settings-gear-icon.svelte';
+  import { formatDate } from '@/lib/format-date';
+  import { formatFeeRate } from '@/lib/format-fee-rate';
+  import { router } from '@/lib/router';
+
+  type Props = {
+    id: string;
+  };
+
+  const props: Props = $props();
+  const query = createWorkspaceDetailQuery(() => props.id);
+
+  const roleCards = $derived.by(() => {
+    const data = query.data;
+
+    if (!data) {
+      return [];
+    }
+
+    return [
+      {
+        color: '#f59e0b',
+        count: data.members_count.assistant,
+        initials: 'AS',
+        label: 'Ассистенты',
+        key: 'assistant',
+      },
+      {
+        color: '#16a34a',
+        count: data.members_count.client,
+        initials: 'CL',
+        label: 'Клиенты',
+        key: 'client',
+      },
+    ];
+  });
+
+  const infoRows = $derived.by(() => {
+    const data = query.data;
+
+    if (!data) {
+      return [];
+    }
+
+    return [
+      {
+        key: 'slug',
+        label: 'Статус',
+        value: WORKSPACE_STATUS_LABELS[data.status],
+        valueClassName: `status-badge status-badge--${data.status}`,
+        valueVariant: 'status' as const,
+      },
+      {
+        key: 'plan',
+        label: 'Тариф',
+        value: WORKSPACE_PLAN_LABELS[data.plan],
+        valueVariant: 'text' as const,
+      },
+      {
+        key: 'fee_rate',
+        label: 'Комиссия',
+        value: formatFeeRate(data.fee_rate),
+        valueVariant: 'text' as const,
+      },
+      {
+        key: 'created_at',
+        label: 'Создано',
+        value: formatDate(data.created_at),
+        valueVariant: 'text' as const,
+      },
+    ];
+  });
+
+  function handleBack() {
+    router.navigate('/');
+  }
+
+  function handleRetry() {
+    query.refetch();
+  }
+
+  const noop = () => undefined;
+
+  const actionItems: { label: string; onclick: () => void }[] = [
+    { label: 'Настройки пространства', onclick: noop },
+    { label: 'Оплата и тариф', onclick: noop },
+    { label: 'Пригласить участника', onclick: noop },
+  ];
+
+  const data = $derived(query.data as WorkspaceDetail | undefined);
+</script>
+
+<section class="workspace-detail-page">
+  <header class="page-header">
+    <button
+      class="back-button"
+      onclick={handleBack}
+      aria-label="Назад"
+    >
+      <ChevronLeftIcon />
+    </button>
+
+    <div class="header-copy">
+      <Typography
+        variant="h2"
+        color="#0a0a0a"
+      >
+        {data?.title ?? 'Рабочее пространство'}
+      </Typography>
+    </div>
+  </header>
+
+  {#if query.isPending}
+    <div class="stack">
+      <div class="skeleton-card skeleton-card--info"></div>
+      <div class="section">
+        <div class="skeleton-heading"></div>
+        <div class="skeleton-card skeleton-card--list"></div>
+      </div>
+      <div class="section">
+        <div class="skeleton-heading"></div>
+        <div class="skeleton-card skeleton-card--list"></div>
+      </div>
+    </div>
+  {:else if query.isError}
+    <div class="error-state">
+      <Typography
+        variant="title"
+        color="#0a0a0a"
+      >
+        Не удалось загрузить карточку
+      </Typography>
+
+      <Typography
+        variant="body"
+        color="#737373"
+      >
+        Проверьте соединение и повторите попытку.
+      </Typography>
+
+      <div class="error-actions">
+        <Button
+          variant="secondary"
+          onclick={handleBack}
+        >
+          К списку
+        </Button>
+
+        <Button onclick={handleRetry}>
+          Повторить
+        </Button>
+      </div>
+    </div>
+  {:else if data}
+    <div class="stack">
+      <RelatedList
+        class="info-card"
+        items={infoRows}
+        getKey={(row) => row.key}
+        itemClass="info-row"
+      >
+        {#snippet children(row)}
+          <Typography
+            variant="caption"
+            color="#737373"
+          >
+            {row.label}
+          </Typography>
+
+          <div class="info-row-value">
+            {#if row.valueVariant === 'status'}
+              <span class={row.valueClassName}>
+                <Typography
+                  variant="overline"
+                  color="currentColor"
+                >
+                  {row.value}
+                </Typography>
+              </span>
+            {:else}
+              <Typography
+                variant="caption"
+                color="#171717"
+              >
+                {row.value}
+              </Typography>
+            {/if}
+          </div>
+        {/snippet}
+      </RelatedList>
+
+      <section class="section">
+        <div class="section-header">
+          <Typography
+            variant="title"
+            color="#171717"
+          >
+            Пользователи
+          </Typography>
+        </div>
+
+        <RelatedList
+          items={roleCards}
+          getKey={(role) => role.key}
+        >
+          {#snippet children(role)}
+            <div class="list-row-content">
+              <div
+                class="avatar"
+                style={`background:${role.color};`}
+                aria-hidden="true"
+              >
+                <Typography
+                  variant="overline"
+                  color="#ffffff"
+                >
+                  {role.initials}
+                </Typography>
+              </div>
+
+              <div class="row-copy">
+                <Typography
+                  variant="body"
+                  color="#171717"
+                >
+                  {role.label}
+                </Typography>
+              </div>
+
+              <Typography
+                variant="caption"
+                color="#171717"
+              >
+                {role.count ?? ''}
+              </Typography>
+            </div>
+          {/snippet}
+        </RelatedList>
+
+        <button
+          class="inline-link"
+          type="button"
+          onclick={noop}
+        >
+          <Typography
+            variant="caption"
+            color="#4f46e5"
+          >
+            Показать всех →
+          </Typography>
+        </button>
+      </section>
+
+      <section class="section">
+        <Typography
+          variant="title"
+          color="#171717"
+        >
+          Действия
+        </Typography>
+
+        <RelatedList
+          items={actionItems}
+          itemAs="button"
+          itemClass="action-row"
+          getKey={(item) => item.label}
+          onitemclick={(item) => item.onclick()}
+        >
+          {#snippet children(item, index)}
+            <div class="action-row-content">
+              <div class="action-left">
+                <span
+                  class="action-icon"
+                  aria-hidden="true"
+                >
+                  {#if index === 0}
+                    <SettingsGearIcon />
+                  {:else if index === 1}
+                    <PaymentCardIcon />
+                  {:else}
+                    <InviteUserIcon />
+                  {/if}
+                </span>
+
+                <Typography
+                  variant="body"
+                  color="#171717"
+                >
+                  {item.label}
+                </Typography>
+              </div>
+
+              <span
+                class="action-arrow"
+                aria-hidden="true"
+              >
+                <ChevronRightIcon />
+              </span>
+            </div>
+          {/snippet}
+        </RelatedList>
+      </section>
+    </div>
+  {/if}
+</section>
+
+<style>
+  .workspace-detail-page {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    gap: 10px;
+    padding: 14px 8px 20px;
+    background: #fafafa;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+  }
+
+  .header-copy {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .header-copy :global(h2) {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .back-button,
+  .menu-button {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .stack {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 16px;
+    overflow: auto;
+    padding: 0 8px 8px;
+  }
+
+  .info-card {
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    background: #fafafa;
+    overflow: hidden;
+  }
+
+  .info-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0 14px;
+  }
+
+  .info-row {
+    display: flex;
+    min-height: 38px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .info-row-value {
+    display: flex;
+    margin-left: auto;
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .section-header :global(p),
+  .section :global(p) {
+    margin: 0;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 53px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .status-badge--active {
+    background: #dcfce7;
+    color: #22c55e;
+  }
+
+  .status-badge--suspended {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .status-badge--archived {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .list-row-content,
+  .action-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .action-row-content {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .avatar {
+    display: flex;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+  }
+
+  .avatar :global(p) {
+    margin: 0;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .row-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .row-copy :global(p:first-child) {
+    font-size: 14px;
+  }
+
+  .inline-link {
+    width: fit-content;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .inline-link :global(p) {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .action-row {
+    padding: 0;
+  }
+
+  .action-left {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .action-icon,
+  .action-arrow {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .skeleton-card,
+  .skeleton-heading {
+    position: relative;
+    overflow: hidden;
+    background: #f1f5f9;
+  }
+
+  .skeleton-card::after,
+  .skeleton-heading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.75), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.2s infinite;
+  }
+
+  .skeleton-card {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+  }
+
+  .skeleton-card--info {
+    height: 154px;
+  }
+
+  .skeleton-card--list {
+    height: 154px;
+  }
+
+  .skeleton-heading {
+    width: 132px;
+    height: 20px;
+    border-radius: 8px;
+  }
+
+  .error-state {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    padding: 24px 20px;
+  }
+
+  .error-state :global(p) {
+    margin: 0;
+  }
+
+  .error-actions {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
+    }
+  }
+</style>

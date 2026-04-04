@@ -2,8 +2,9 @@
   import { Typography } from '@chiffa001/tg-svelte-ui';
 
   import { createWorkspaceMutation } from '@/api/workspaces/queries';
-  import { WORKSPACE_PLAN, type WorkspacePlan } from '@/api/workspaces/types';
+  import { WORKSPACE_PLAN, WORKSPACE_PLAN_OPTIONS, type WorkspacePlan } from '@/api/workspaces/types';
   import Button from '@/components/ui/button.svelte';
+  import ChevronLeftIcon from '@/icons/chevron-left-icon.svelte';
   import { router } from '@/lib/router';
   import { toSlug } from '@/lib/slug';
 
@@ -14,13 +15,6 @@
   let plan = $state<WorkspacePlan>(WORKSPACE_PLAN.FREE);
   let slugTouched = $state(false);
   let errorMessage = $state('');
-
-  const plans: { value: WorkspacePlan; label: string }[] = [
-    { value: WORKSPACE_PLAN.FREE, label: 'Free' },
-    { value: WORKSPACE_PLAN.BASIC, label: 'Basic' },
-    { value: WORKSPACE_PLAN.PRO, label: 'Pro' },
-    { value: WORKSPACE_PLAN.BUSINESS, label: 'Business' },
-  ];
 
   function handleTitleInput(e: Event) {
     title = (e.target as HTMLInputElement).value;
@@ -75,20 +69,7 @@
       onclick={() => router.navigate('/')}
       aria-label="Назад"
     >
-      <svg
-        width="20"
-        height="20"
-        viewBox="0 0 20 20"
-        fill="none"
-      >
-        <path
-          d="M12.5 15L7.5 10L12.5 5"
-          stroke="#172033"
-          stroke-width="1.75"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-      </svg>
+      <ChevronLeftIcon color="#172033" />
     </button>
 
     <Typography
@@ -165,7 +146,7 @@
       </Typography>
 
       <div class="plan-options">
-        {#each plans as p (p.value)}
+        {#each WORKSPACE_PLAN_OPTIONS as p (p.value)}
           <button
             type="button"
             class="plan-chip {plan === p.value ? 'plan-chip--active' : ''}"
