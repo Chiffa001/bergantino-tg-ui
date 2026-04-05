@@ -7,6 +7,7 @@
   import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
   import WorkspaceDetailPage from '@/pages/workspace-detail-page.svelte';
+  import WorkspaceUsersPage from '@/pages/workspace-users-page.svelte';
   import WorkspacesPage from '@/pages/workspaces-page.svelte';
 </script>
 
@@ -38,6 +39,19 @@
   >
     {#snippet children({ params })}
       <WorkspaceDetailPage id={params.id} />
+    {/snippet}
+  </Route>
+
+  <Route
+    path="/workspaces/:id/users"
+    exact
+  >
+    {#snippet children({ params, query })}
+      <WorkspaceUsersPage
+        id={params.id}
+        role={query.get('role')}
+        search={query.get('search')}
+      />
     {/snippet}
   </Route>
 

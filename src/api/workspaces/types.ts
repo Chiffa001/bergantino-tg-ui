@@ -1,4 +1,5 @@
 export type WorkspaceStatus = 'active' | 'suspended' | 'archived';
+export type WorkspaceRole = 'workspace_admin' | 'assistant' | 'client';
 
 export const WORKSPACE_STATUS_LABELS: Record<WorkspaceStatus, string> = {
   active: 'Active',
@@ -37,15 +38,24 @@ export type Workspace = {
 };
 
 // Соответствует WorkspaceDetailResponse из API (GET /workspaces/{id})
-export type WorkspaceMembersCount = {
-  workspace_admin: number;
-  assistant: number;
-  client: number;
-};
+export type WorkspaceMembersCount = Record<WorkspaceRole, number>;
 
 export type WorkspaceDetail = Workspace & {
   fee_rate: string;
   members_count: WorkspaceMembersCount;
+};
+
+export type WorkspaceUser = {
+  id: string;
+  full_name: string;
+  username: string | null;
+  role: WorkspaceRole;
+  joined_at: string;
+};
+
+export type WorkspaceUsersFilters = {
+  role?: WorkspaceRole;
+  search?: string;
 };
 
 export type CreateWorkspaceRequest = {

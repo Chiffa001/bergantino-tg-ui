@@ -94,6 +94,11 @@
     query.refetch();
   }
 
+  function navigateToUsers(role?: string) {
+    const suffix = role ? `?role=${role}` : '';
+    router.navigate(`/workspaces/${props.id}/users${suffix}`);
+  }
+
   const noop = () => undefined;
 
   const actionItems: { label: string; onclick: () => void }[] = [
@@ -216,7 +221,10 @@
 
         <RelatedList
           items={roleCards}
+          itemAs="button"
+          itemClass="user-role-row"
           getKey={(role) => role.key}
+          onitemclick={(role) => navigateToUsers(role.key)}
         >
           {#snippet children(role)}
             <div class="list-row-content">
@@ -255,7 +263,7 @@
         <button
           class="inline-link"
           type="button"
-          onclick={noop}
+          onclick={() => navigateToUsers()}
         >
           <Typography
             variant="caption"
@@ -510,6 +518,10 @@
   }
 
   .action-row {
+    padding: 0;
+  }
+
+  .user-role-row {
     padding: 0;
   }
 
