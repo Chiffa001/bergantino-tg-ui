@@ -4,18 +4,16 @@
 
   import { createWorkspaceUsersQuery } from '@/api/workspaces/queries';
   import type { WorkspaceUser, WorkspaceUsersFilters } from '@/api/workspaces/types';
-  import Button from '@/components/ui/button.svelte';
+  import PageHeader from '@/components/ui/page-header.svelte';
+  import QueryErrorState from '@/components/ui/query-error-state.svelte';
   import RelatedList from '@/components/ui/related-list.svelte';
-  import ChevronLeftIcon from '@/icons/chevron-left-icon.svelte';
+  import WorkspaceMemberRow from '@/components/workspaces/workspace-member-row.svelte';
   import SearchIcon from '@/icons/search-icon.svelte';
   import UserPlusIcon from '@/icons/user-plus-icon.svelte';
   import UsersEmptyIcon from '@/icons/users-empty-icon.svelte';
   import { router } from '@/lib/router';
   import {
-    getWorkspaceMemberInitials,
     isWorkspaceMemberFilter,
-    WORKSPACE_MEMBER_AVATAR_COLORS,
-    WORKSPACE_MEMBER_BADGE_COLORS,
     WORKSPACE_MEMBER_FILTER_LABELS,
     WORKSPACE_MEMBER_FILTERS,
     type WorkspaceMemberFilter,
@@ -116,32 +114,20 @@
 </script>
 
 <section class="workspace-users-page">
-  <header class="page-header">
-    <button
-      class="back-button"
-      onclick={handleBack}
-      aria-label="Назад"
-    >
-      <ChevronLeftIcon />
-    </button>
-
-    <div class="header-copy">
-      <Typography
-        variant="h2"
-        color="#0a0a0a"
+  <PageHeader
+    title="Пользователи"
+    onback={handleBack}
+  >
+    {#snippet actions()}
+      <button
+        class="add-button"
+        type="button"
+        aria-label="Добавить пользователя"
       >
-        Пользователи
-      </Typography>
-    </div>
-
-    <button
-      class="add-button"
-      type="button"
-      aria-label="Добавить пользователя"
-    >
-      <UserPlusIcon />
-    </button>
-  </header>
+        <UserPlusIcon />
+      </button>
+    {/snippet}
+  </PageHeader>
 
   {#if query.isPending}
     <div class="stack">
@@ -155,34 +141,11 @@
       <div class="list-skeleton"></div>
     </div>
   {:else if query.isError}
-    <div class="error-state">
-      <Typography
-        variant="title"
-        color="#0a0a0a"
-      >
-        Не удалось загрузить пользователей
-      </Typography>
-
-      <Typography
-        variant="body"
-        color="#737373"
-      >
-        Проверьте соединение и повторите попытку.
-      </Typography>
-
-      <div class="error-actions">
-        <Button
-          variant="secondary"
-          onclick={handleBack}
-        >
-          Назад
-        </Button>
-
-        <Button onclick={handleRetry}>
-          Повторить
-        </Button>
-      </div>
-    </div>
+    <QueryErrorState
+      title="Не удалось загрузить пользователей"
+      onback={handleBack}
+      onretry={handleRetry}
+    />
   {:else}
     <div class="stack">
       <div class="search-box">
@@ -261,48 +224,7 @@
           class="members-list"
         >
           {#snippet children(member: WorkspaceUser)}
-            <div class="member-row">
-              <div
-                class="member-avatar"
-                style={`background:${WORKSPACE_MEMBER_AVATAR_COLORS[member.role]};`}
-                aria-hidden="true"
-              >
-                <Typography
-                  variant="overline"
-                  color="#ffffff"
-                >
-                  {getWorkspaceMemberInitials(member.full_name)}
-                </Typography>
-              </div>
-
-              <div class="member-copy">
-                <Typography
-                  variant="body"
-                  color="#171717"
-                >
-                  {member.full_name}
-                </Typography>
-
-                <Typography
-                  variant="caption"
-                  color="#737373"
-                >
-                  {member.username ?? 'Без username'}
-                </Typography>
-              </div>
-
-              <span
-                class="member-badge"
-                style={`background:${WORKSPACE_MEMBER_BADGE_COLORS[member.role].background};color:${WORKSPACE_MEMBER_BADGE_COLORS[member.role].color};`}
-              >
-                <Typography
-                  variant="overline"
-                  color="currentColor"
-                >
-                  {WORKSPACE_MEMBER_FILTER_LABELS[member.role]}
-                </Typography>
-              </span>
-            </div>
+            <WorkspaceMemberRow {member} />
           {/snippet}
         </RelatedList>
       {/if}
@@ -323,25 +245,6 @@
     background: #fafafa;
   }
 
-  .page-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 8px;
-  }
-
-  .header-copy {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .header-copy :global(h2) {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .back-button,
   .add-button {
     display: flex;
     width: 24px;
@@ -436,55 +339,6 @@
     min-height: 0;
   }
 
-  .member-row {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .member-avatar {
-    display: flex;
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border-radius: 999px;
-  }
-
-  .member-avatar :global(p) {
-    margin: 0;
-    font-size: 10px;
-    font-weight: 700;
-  }
-
-  .member-copy {
-    display: flex;
-    min-width: 0;
-    flex: 1;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .member-copy :global(p) {
-    margin: 0;
-  }
-
-  .member-copy :global(p:first-child) {
-    font-size: 14px;
-  }
-
-  .member-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border-radius: 999px;
-    padding: 3px 8px;
-    text-align: center;
-  }
-
   .empty-state {
     display: flex;
     min-height: 0;
@@ -569,29 +423,6 @@
     height: 332px;
     border-radius: 12px;
     border: 1px solid #e5e7eb;
-  }
-
-  .error-state {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-align: center;
-    padding: 24px 20px;
-  }
-
-  .error-state :global(p) {
-    margin: 0;
-  }
-
-  .error-actions {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 8px;
   }
 
   @keyframes shimmer {

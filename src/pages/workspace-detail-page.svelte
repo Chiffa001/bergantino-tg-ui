@@ -7,9 +7,9 @@
     WORKSPACE_STATUS_LABELS,
     type WorkspaceDetail,
   } from '@/api/workspaces/types';
-  import Button from '@/components/ui/button.svelte';
+  import PageHeader from '@/components/ui/page-header.svelte';
+  import QueryErrorState from '@/components/ui/query-error-state.svelte';
   import RelatedList from '@/components/ui/related-list.svelte';
-  import ChevronLeftIcon from '@/icons/chevron-left-icon.svelte';
   import ChevronRightIcon from '@/icons/chevron-right-icon.svelte';
   import InviteUserIcon from '@/icons/invite-user-icon.svelte';
   import PaymentCardIcon from '@/icons/payment-card-icon.svelte';
@@ -101,34 +101,20 @@
 
   const noop = () => undefined;
 
-  const actionItems: { label: string; onclick: () => void }[] = [
-    { label: 'Настройки пространства', onclick: noop },
-    { label: 'Оплата и тариф', onclick: noop },
-    { label: 'Пригласить участника', onclick: noop },
+  const actionItems: { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void }[] = [
+    { label: 'Настройки пространства', icon: 'settings', onclick: noop },
+    { label: 'Оплата и тариф', icon: 'payment', onclick: noop },
+    { label: 'Пригласить участника', icon: 'invite', onclick: noop },
   ];
 
   const data = $derived(query.data as WorkspaceDetail | undefined);
 </script>
 
 <section class="workspace-detail-page">
-  <header class="page-header">
-    <button
-      class="back-button"
-      onclick={handleBack}
-      aria-label="Назад"
-    >
-      <ChevronLeftIcon />
-    </button>
-
-    <div class="header-copy">
-      <Typography
-        variant="h2"
-        color="#0a0a0a"
-      >
-        {data?.title ?? 'Рабочее пространство'}
-      </Typography>
-    </div>
-  </header>
+  <PageHeader
+    title={data?.title ?? 'Рабочее пространство'}
+    onback={handleBack}
+  />
 
   {#if query.isPending}
     <div class="stack">
@@ -143,34 +129,12 @@
       </div>
     </div>
   {:else if query.isError}
-    <div class="error-state">
-      <Typography
-        variant="title"
-        color="#0a0a0a"
-      >
-        Не удалось загрузить карточку
-      </Typography>
-
-      <Typography
-        variant="body"
-        color="#737373"
-      >
-        Проверьте соединение и повторите попытку.
-      </Typography>
-
-      <div class="error-actions">
-        <Button
-          variant="secondary"
-          onclick={handleBack}
-        >
-          К списку
-        </Button>
-
-        <Button onclick={handleRetry}>
-          Повторить
-        </Button>
-      </div>
-    </div>
+    <QueryErrorState
+      title="Не удалось загрузить карточку"
+      backLabel="К списку"
+      onback={handleBack}
+      onretry={handleRetry}
+    />
   {:else if data}
     <div class="stack">
       <RelatedList
@@ -289,16 +253,16 @@
           getKey={(item) => item.label}
           onitemclick={(item) => item.onclick()}
         >
-          {#snippet children(item, index)}
+          {#snippet children(item)}
             <div class="action-row-content">
               <div class="action-left">
                 <span
                   class="action-icon"
                   aria-hidden="true"
                 >
-                  {#if index === 0}
+                  {#if item.icon === 'settings'}
                     <SettingsGearIcon />
-                  {:else if index === 1}
+                  {:else if item.icon === 'payment'}
                     <PaymentCardIcon />
                   {:else}
                     <InviteUserIcon />
@@ -338,41 +302,6 @@
     gap: 10px;
     padding: 14px 8px 20px;
     background: #fafafa;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 0 8px;
-  }
-
-  .header-copy {
-    min-width: 0;
-    flex: 1;
-  }
-
-  .header-copy :global(h2) {
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .back-button,
-  .menu-button {
-    display: flex;
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
   }
 
   .stack {
@@ -574,29 +503,6 @@
     width: 132px;
     height: 20px;
     border-radius: 8px;
-  }
-
-  .error-state {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    text-align: center;
-    padding: 24px 20px;
-  }
-
-  .error-state :global(p) {
-    margin: 0;
-  }
-
-  .error-actions {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 8px;
   }
 
   @keyframes shimmer {
