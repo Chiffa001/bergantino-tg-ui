@@ -7,6 +7,7 @@
   import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
   import WorkspaceDetailPage from '@/pages/workspace-detail-page.svelte';
+  import WorkspaceSettingsPage from '@/pages/workspace-settings-page.svelte';
   import WorkspaceUsersPage from '@/pages/workspace-users-page.svelte';
   import WorkspacesPage from '@/pages/workspaces-page.svelte';
 </script>
@@ -39,6 +40,15 @@
   >
     {#snippet children({ params })}
       <WorkspaceDetailPage id={params.id} />
+    {/snippet}
+  </Route>
+
+  <Route
+    path="/workspaces/:id/settings"
+    exact
+  >
+    {#snippet children({ params })}
+      <WorkspaceSettingsPage id={params.id} />
     {/snippet}
   </Route>
 

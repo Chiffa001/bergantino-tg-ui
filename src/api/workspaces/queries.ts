@@ -8,8 +8,9 @@ import {
   getWorkspaceDetail,
   getWorkspaces,
   getWorkspaceUsers,
+  updateWorkspaceBot,
 } from './requests';
-import type { CreateWorkspaceInviteRequest, WorkspaceUsersFilters } from './types';
+import type { CreateWorkspaceInviteRequest, UpdateWorkspaceBotRequest, WorkspaceUsersFilters } from './types';
 
 export const workspacesQueryKey = ['workspaces'] as const;
 export const workspaceDetailQueryKey = (id: string) => ['workspace', id] as const;
@@ -51,4 +52,13 @@ export const createWorkspaceMutation = () =>
 export const createWorkspaceInviteMutation = (id: () => string) =>
   createMutation(() => ({
     mutationFn: (data: CreateWorkspaceInviteRequest) => createWorkspaceInvite(id(), data),
+  }));
+
+export const createUpdateWorkspaceBotMutation = (id: () => string) =>
+  createMutation(() => ({
+    mutationFn: (data: UpdateWorkspaceBotRequest) => updateWorkspaceBot(id(), data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workspaceDetailQueryKey(id()) });
+      queryClient.invalidateQueries({ queryKey: workspacesQueryKey });
+    },
   }));

@@ -35,13 +35,19 @@
     </span>
   </div>
 
-  <Typography
-    variant="caption"
-    color="#8e9ab3"
-    className="ws-meta"
-  >
-    slug: {workspace.slug}
-  </Typography>
+  <div class="slug-row">
+    <Typography
+      variant="caption"
+      color="#8e9ab3"
+      className="ws-meta"
+    >
+      slug: {workspace.slug}
+    </Typography>
+
+    {#if workspace.has_bot}
+      <span class="bot-badge">🤖</span>
+    {/if}
+  </div>
 
   <div class="card-row card-row--footer">
     <span class="plan-badge plan-badge--{workspace.plan}">
@@ -102,6 +108,17 @@
   .workspace-card :global(.ws-name),
   .workspace-card :global(.ws-meta) {
     margin: 0;
+  }
+
+  .slug-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bot-badge {
+    font-size: 13px;
+    line-height: 1;
   }
 
   .status-badge,

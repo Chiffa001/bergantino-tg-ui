@@ -102,7 +102,7 @@
   const noop = () => undefined;
 
   const actionItems: { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void }[] = [
-    { label: 'Настройки пространства', icon: 'settings', onclick: noop },
+    { label: 'Настройки пространства', icon: 'settings', onclick: () => router.navigate(`/workspaces/${props.id}/settings`) },
     { label: 'Оплата и тариф', icon: 'payment', onclick: noop },
     { label: 'Пригласить участника', icon: 'invite', onclick: noop },
   ];

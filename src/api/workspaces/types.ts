@@ -36,6 +36,7 @@ export type Workspace = {
   status: WorkspaceStatus;
   plan: WorkspacePlan;
   created_at: string;
+  has_bot: boolean;
 };
 
 // Соответствует WorkspaceDetailResponse из API (GET /workspaces/{id})
@@ -44,6 +45,8 @@ export type WorkspaceMembersCount = Record<WorkspaceRole, number>;
 export type WorkspaceDetail = Workspace & {
   fee_rate: string;
   members_count: WorkspaceMembersCount;
+  bot_username: string | null;
+  mini_app_url: string | null;
 };
 
 export type WorkspaceUser = {
@@ -67,6 +70,12 @@ export type CreateWorkspaceRequest = {
 
 export type CreateWorkspaceInviteRequest = {
   role: WorkspaceInviteRole;
+};
+
+export type UpdateWorkspaceBotRequest = {
+  bot_token: string | null;
+  bot_username: string | null;
+  mini_app_url: string | null;
 };
 
 export type WorkspaceInvite = {

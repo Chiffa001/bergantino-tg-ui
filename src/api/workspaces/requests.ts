@@ -3,6 +3,7 @@ import { requestJson } from '@/lib/fetch';
 import type {
   CreateWorkspaceInviteRequest,
   CreateWorkspaceRequest,
+  UpdateWorkspaceBotRequest,
   Workspace,
   WorkspaceDetail,
   WorkspaceInvite,
@@ -40,6 +41,16 @@ export const getWorkspaceUsers = async (
 export const createWorkspace = async (data: CreateWorkspaceRequest): Promise<Workspace> => {
   return requestJson<Workspace>('/workspaces', {
     method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const updateWorkspaceBot = async (
+  id: string,
+  data: UpdateWorkspaceBotRequest,
+): Promise<WorkspaceDetail> => {
+  return requestJson<WorkspaceDetail>(`/workspaces/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(data),
   });
 };
