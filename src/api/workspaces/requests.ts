@@ -1,9 +1,11 @@
 import { requestJson } from '@/lib/fetch';
 
 import type {
+  CreateWorkspaceInviteRequest,
   CreateWorkspaceRequest,
   Workspace,
   WorkspaceDetail,
+  WorkspaceInvite,
   WorkspaceUser,
   WorkspaceUsersFilters,
 } from './types';
@@ -37,6 +39,16 @@ export const getWorkspaceUsers = async (
 
 export const createWorkspace = async (data: CreateWorkspaceRequest): Promise<Workspace> => {
   return requestJson<Workspace>('/workspaces', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+};
+
+export const createWorkspaceInvite = async (
+  id: string,
+  data: CreateWorkspaceInviteRequest,
+): Promise<WorkspaceInvite> => {
+  return requestJson<WorkspaceInvite>(`/workspaces/${id}/invites`, {
     method: 'POST',
     body: JSON.stringify(data),
   });

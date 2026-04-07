@@ -1,5 +1,6 @@
 export type WorkspaceStatus = 'active' | 'suspended' | 'archived';
 export type WorkspaceRole = 'workspace_admin' | 'assistant' | 'client';
+export type WorkspaceInviteRole = 'assistant';
 
 export const WORKSPACE_STATUS_LABELS: Record<WorkspaceStatus, string> = {
   active: 'Active',
@@ -62,4 +63,16 @@ export type CreateWorkspaceRequest = {
   title: string;
   slug: string;
   plan: WorkspacePlan;
+};
+
+export type CreateWorkspaceInviteRequest = {
+  role: WorkspaceInviteRole;
+};
+
+export type WorkspaceInvite = {
+  id: string;
+  token: string;
+  role: WorkspaceInviteRole;
+  expires_at: string;
+  invite_url: string;
 };

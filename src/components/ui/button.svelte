@@ -2,7 +2,7 @@
   import { Typography } from '@chiffa001/tg-svelte-ui';
   import type { Snippet } from 'svelte';
 
-  type Variant = 'default' | 'destructive' | 'secondary';
+  type Variant = 'default' | 'destructive' | 'secondary' | 'success' | 'ghost';
 
   type Props = {
     variant?: Variant;
@@ -14,6 +14,7 @@
     target?: string;
     rel?: string;
     onclick?: (e: MouseEvent) => void;
+    leading?: Snippet;
     children?: Snippet;
   };
 
@@ -27,10 +28,13 @@
     target,
     rel,
     onclick,
+    leading,
     children,
   }: Props = $props();
 
-  const textColor = $derived(variant === 'secondary' ? '#374151' : '#ffffff');
+  const textColor = $derived(
+    variant === 'secondary' ? '#374151' : variant === 'ghost' ? '#737373' : '#ffffff',
+  );
   const isDisabled = $derived(disabled || loading);
 </script>
 
@@ -60,12 +64,23 @@
     {/if}
 
     <span class:content-hidden={loading}>
-      <Typography
-        variant="body"
-        color={textColor}
-      >
-        {@render children?.()}
-      </Typography>
+      <span class={`content ${leading ? 'content--with-leading' : ''}`.trim()}>
+        {#if leading}
+          <span
+            class="leading"
+            aria-hidden="true"
+          >
+            {@render leading()}
+          </span>
+        {/if}
+
+        <Typography
+          variant="body"
+          color={textColor}
+        >
+          {@render children?.()}
+        </Typography>
+      </span>
     </span>
   </a>
 {:else}
@@ -84,12 +99,23 @@
     {/if}
 
     <span class:content-hidden={loading}>
-      <Typography
-        variant="body"
-        color={textColor}
-      >
-        {@render children?.()}
-      </Typography>
+      <span class={`content ${leading ? 'content--with-leading' : ''}`.trim()}>
+        {#if leading}
+          <span
+            class="leading"
+            aria-hidden="true"
+          >
+            {@render leading()}
+          </span>
+        {/if}
+
+        <Typography
+          variant="body"
+          color={textColor}
+        >
+          {@render children?.()}
+        </Typography>
+      </span>
     </span>
   </button>
 {/if}
@@ -110,9 +136,40 @@
     text-decoration: none;
   }
 
+  .content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .content--with-leading {
+    position: relative;
+    width: 100%;
+    gap: 0;
+  }
+
+  .leading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .content--with-leading .leading {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(calc(-100% - 4px), -50%);
+  }
+
   .btn :global(p) {
     font-weight: 700;
     margin: 0;
+  }
+
+  .btn:hover:not(:disabled):not(.btn--loading) {
+    filter: brightness(0.97);
   }
 
   .btn:active:not(:disabled) {
@@ -124,10 +181,18 @@
     cursor: not-allowed;
   }
 
+  .btn--success:disabled:not(.btn--loading) {
+    opacity: 1;
+  }
+
   .btn[aria-disabled='true']:not(.btn--loading) {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+  }
+
+  .btn--success[aria-disabled='true']:not(.btn--loading) {
+    opacity: 1;
   }
 
   .btn--loading {
@@ -163,6 +228,19 @@
   .btn--secondary {
     background-color: #f3f4f6;
     border: 1px solid #d1d5db;
+  }
+
+  .btn--success {
+    background-color: #16a34a;
+  }
+
+  .btn--ghost {
+    padding: 0;
+    background-color: transparent;
+  }
+
+  .btn--ghost:hover:not(:disabled):not(.btn--loading) {
+    filter: none;
   }
 
   @keyframes spin {

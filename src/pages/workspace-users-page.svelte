@@ -7,6 +7,7 @@
   import PageHeader from '@/components/ui/page-header.svelte';
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
   import RelatedList from '@/components/ui/related-list.svelte';
+  import InviteUserModal from '@/components/workspaces/invite-user-modal.svelte';
   import WorkspaceMemberRow from '@/components/workspaces/workspace-member-row.svelte';
   import SearchIcon from '@/icons/search-icon.svelte';
   import UserPlusIcon from '@/icons/user-plus-icon.svelte';
@@ -28,6 +29,7 @@
   const props: Props = $props();
   let searchInputElement = $state<HTMLInputElement | undefined>(undefined);
   let searchDebounce: ReturnType<typeof setTimeout> | undefined;
+  let isInviteModalOpen = $state(false);
 
   const activeFilter = $derived(
     isWorkspaceMemberFilter(props.role) && props.role !== 'all' ? props.role : 'all',
@@ -123,6 +125,9 @@
         class="add-button"
         type="button"
         aria-label="Добавить пользователя"
+        onclick={() => {
+          isInviteModalOpen = true;
+        }}
       >
         <UserPlusIcon />
       </button>
@@ -230,6 +235,14 @@
       {/if}
     </div>
   {/if}
+
+  <InviteUserModal
+    isOpen={isInviteModalOpen}
+    workspaceId={props.id}
+    onClose={() => {
+      isInviteModalOpen = false;
+    }}
+  />
 </section>
 
 <style>

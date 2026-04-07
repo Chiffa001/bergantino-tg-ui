@@ -2,8 +2,14 @@ import { createMutation, createQuery } from '@tanstack/svelte-query';
 
 import { queryClient } from '@/lib/query-client';
 
-import { createWorkspace, getWorkspaceDetail, getWorkspaces,getWorkspaceUsers } from './requests';
-import type { WorkspaceUsersFilters } from './types';
+import {
+  createWorkspace,
+  createWorkspaceInvite,
+  getWorkspaceDetail,
+  getWorkspaces,
+  getWorkspaceUsers,
+} from './requests';
+import type { CreateWorkspaceInviteRequest, WorkspaceUsersFilters } from './types';
 
 export const workspacesQueryKey = ['workspaces'] as const;
 export const workspaceDetailQueryKey = (id: string) => ['workspace', id] as const;
@@ -40,4 +46,9 @@ export const createWorkspaceMutation = () =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspacesQueryKey });
     },
+  }));
+
+export const createWorkspaceInviteMutation = (id: () => string) =>
+  createMutation(() => ({
+    mutationFn: (data: CreateWorkspaceInviteRequest) => createWorkspaceInvite(id(), data),
   }));
