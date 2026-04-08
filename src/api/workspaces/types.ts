@@ -46,7 +46,6 @@ export type WorkspaceDetail = Workspace & {
   fee_rate: string;
   members_count: WorkspaceMembersCount;
   bot_username: string | null;
-  mini_app_url: string | null;
 };
 
 export type WorkspaceUser = {
@@ -75,7 +74,6 @@ export type CreateWorkspaceInviteRequest = {
 export type UpdateWorkspaceBotRequest = {
   bot_token: string | null;
   bot_username: string | null;
-  mini_app_url: string | null;
 };
 
 export type WorkspaceInvite = {

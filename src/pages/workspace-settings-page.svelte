@@ -7,6 +7,7 @@
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
   import RelatedList from '@/components/ui/related-list.svelte';
   import { router } from '@/lib/router';
+  import { buildWorkspaceMiniAppUrl, normalizeBotUsername } from '@/lib/workspace-bot';
 
   type Props = {
     id: string;
@@ -20,15 +21,14 @@
   let disconnectOpen = $state(false);
   let tokenField = $state('');
   let usernameField = $state('');
-  let miniAppUrlField = $state('');
   let tokenError = $state<string | null>(null);
   let saveSuccess = $state(false);
 
-  const formValid = $derived(
-    tokenField.trim().length > 0 &&
-      usernameField.trim().length > 0 &&
-      miniAppUrlField.trim().length > 0,
+  const normalizedUsername = $derived(normalizeBotUsername(usernameField));
+  const miniAppUrl = $derived(
+    normalizedUsername.length > 0 ? buildWorkspaceMiniAppUrl(normalizedUsername) : '',
   );
+  const formValid = $derived(tokenField.trim().length > 0 && normalizedUsername.length > 0);
 
   const data = $derived(query.data);
   const hasBot = $derived(data?.has_bot ?? false);
@@ -54,7 +54,6 @@
     botFormOpen = true;
     tokenField = '';
     usernameField = data?.bot_username ?? '';
-    miniAppUrlField = data?.mini_app_url ?? '';
     tokenError = null;
     saveSuccess = false;
   }
@@ -63,7 +62,6 @@
     botFormOpen = false;
     tokenField = '';
     usernameField = '';
-    miniAppUrlField = '';
     tokenError = null;
   }
 
@@ -75,15 +73,13 @@
     try {
       await mutation.mutateAsync({
         bot_token: tokenField.trim(),
-        bot_username: usernameField.trim(),
-        mini_app_url: miniAppUrlField.trim(),
+        bot_username: normalizedUsername,
       });
 
       botFormOpen = false;
       saveSuccess = true;
       tokenField = '';
       usernameField = '';
-      miniAppUrlField = '';
     } catch (err) {
       const error = err as Error;
 
@@ -102,7 +98,6 @@
       await mutation.mutateAsync({
         bot_token: null,
         bot_username: null,
-        mini_app_url: null,
       });
     } catch {
       router.navigate('/internal-server-error', { replace: true });
@@ -267,30 +262,12 @@
                 placeholder="ClinicBot"
                 bind:value={usernameField}
               />
-            </div>
-
-            <div class="field">
-              <label class="field-label">
-                <Typography
-                  variant="caption"
-                  color="#737373"
-                >
-                  URL Mini App
-                </Typography>
-              </label>
-
-              <input
-                class="input"
-                type="text"
-                placeholder="https://t.me/ClinicBot/App"
-                bind:value={miniAppUrlField}
-              />
 
               <Typography
                 variant="caption"
                 color="#a3a3a3"
               >
-                Укажите ссылку, через которую пользователи будут открывать приложение
+                Mini App URL строится автоматически: {miniAppUrl || 'https://t.me/<bot_username>'}
               </Typography>
             </div>
 
@@ -302,18 +279,12 @@
               Сохранить
             </Button>
 
-            <button
-              class="cancel-link"
-              type="button"
+            <Button
+              variant="ghost"
               onclick={cancelForm}
             >
-              <Typography
-                variant="caption"
-                color="#737373"
-              >
-                Отмена
-              </Typography>
-            </button>
+              Отмена
+            </Button>
           </div>
         {:else}
           <!-- Бот подключён -->
@@ -341,7 +312,7 @@
                 variant="caption"
                 color="#737373"
               >
-                {data.mini_app_url}
+                {data.bot_username ? buildWorkspaceMiniAppUrl(data.bot_username) : ''}
               </Typography>
             </div>
 
@@ -565,19 +536,6 @@
 
   .input::placeholder {
     color: #9ca3af;
-  }
-
-  .cancel-link {
-    width: fit-content;
-    align-self: center;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
-  }
-
-  .cancel-link :global(p) {
-    margin: 0;
   }
 
   /* Success banner */
