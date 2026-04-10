@@ -11,6 +11,8 @@
     "src/**/*.svelte",
     "vite.config.ts",
     "eslint.config.js",
-    "svelte.config.js"
+    "svelte.config.js",
+    "playwright.config.ts",
+    "e2e/**/*.ts"
   ]
 }
