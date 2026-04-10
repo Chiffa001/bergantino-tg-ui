@@ -34,7 +34,9 @@
     "typescript-eslint": "^8.28.0",
     "vite": "^8.0.1",
     "vite-plugin-mkcert": "^1.17.8",
-    "vitest": "^4.1.1"
+    "vitest": "^4.1.1",
+    "@emnapi/core": "^1.9.2",
+    "@emnapi/runtime": "^1.9.2"
   },
   "dependencies": {
     "@chiffa001/tg-svelte-ui": "^0.0.17",
