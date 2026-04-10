@@ -103,14 +103,12 @@
     router.navigate(`/workspaces/${props.id}/users${suffix}`);
   }
 
-  const noop = () => undefined;
-
   const actionItems: { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void }[] =
     canManageWorkspace
       ? [
         { label: 'Настройки пространства', icon: 'settings', onclick: () => router.navigate(`/workspaces/${props.id}/settings`) },
-        { label: 'Оплата и тариф', icon: 'payment', onclick: noop },
-        { label: 'Пригласить участника', icon: 'invite', onclick: noop },
+        { label: 'Оплата и тариф', icon: 'payment', onclick: () => router.navigate(`/workspaces/${props.id}/billing`) },
+        { label: 'Пригласить участника', icon: 'invite', onclick: () => router.navigate(`/workspaces/${props.id}/users`) },
       ]
       : [];
 

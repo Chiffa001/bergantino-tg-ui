@@ -1,11 +1,21 @@
 import type { Page, Route } from '@playwright/test';
 
+import type {
+  Workspace,
+  WorkspaceBilling,
+  WorkspaceBillingPeriod,
+  WorkspaceBillingPlan,
+  WorkspaceDetail,
+  WorkspacePlan,
+} from '../../src/api/workspaces/types';
 import { API_DATA } from './api-data';
 
 type ApiDataOverrides = {
   auth?: typeof API_DATA.auth;
   workspaces?: typeof API_DATA.workspaces;
   workspaceDetail?: typeof API_DATA.workspaceDetail | null;
+  workspaceBilling?: typeof API_DATA.workspaceBilling | null;
+  workspaceBillingPlans?: typeof API_DATA.workspaceBillingPlans;
   workspaceUsers?: typeof API_DATA.workspaceUsers;
   invite?: typeof API_DATA.invite | null;
 };
@@ -33,6 +43,17 @@ function isApi(route: Route) {
  */
 export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}) {
   const data = { ...API_DATA, ...overrides };
+  let workspacesState: Workspace[] = data.workspaces.map((workspace) => ({ ...workspace }));
+  let workspaceDetailState: WorkspaceDetail | null = data.workspaceDetail
+    ? { ...data.workspaceDetail }
+    : null;
+  let workspaceBillingState: WorkspaceBilling | null = data.workspaceBilling
+    ? { ...data.workspaceBilling }
+    : null;
+  let workspaceBillingPlansState: WorkspaceBillingPlan[] = data.workspaceBillingPlans.map((plan) => ({
+    ...plan,
+    limits: { ...plan.limits },
+  }));
 
   await page.route(`${API_ORIGIN}/**`, (route) => {
     if (!isApi(route)) return route.continue();
@@ -48,7 +69,7 @@ export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}
 
     // GET /workspaces  (list)
     if (method === 'GET' && path === '/workspaces') {
-      return json(route, data.workspaces);
+      return json(route, workspacesState);
     }
 
     // POST /workspaces  (create)
@@ -61,6 +82,121 @@ export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}
       return json(route, data.workspaceUsers);
     }
 
+    // GET /workspaces/:id/billing
+    if (method === 'GET' && /^\/workspaces\/[^/]+\/billing$/.test(path)) {
+      if (workspaceBillingState === null) {
+        return json(route, { message: 'Not found' }, 404);
+      }
+      return json(route, workspaceBillingState);
+    }
+
+    // GET /workspaces/:id/billing/plans
+    if (method === 'GET' && /^\/workspaces\/[^/]+\/billing\/plans$/.test(path)) {
+      return json(route, workspaceBillingPlansState);
+    }
+
+    // PATCH /workspaces/:id/billing/admin
+    if (method === 'PATCH' && /^\/workspaces\/[^/]+\/billing\/admin$/.test(path)) {
+      if (workspaceBillingState === null || workspaceDetailState === null) {
+        return json(route, { message: 'Not found' }, 404);
+      }
+
+      const body = route.request().postDataJSON() as {
+        plan?: WorkspacePlan;
+        billing_period?: WorkspaceBillingPeriod;
+        expires_at?: string | null;
+      } | null;
+      const nextPlan = body?.plan;
+      const billingPeriod = body?.billing_period ?? 'monthly';
+
+      if (!nextPlan) {
+        return json(route, { message: 'Validation error' }, 400);
+      }
+
+      workspaceBillingPlansState = workspaceBillingPlansState.map((plan) => ({
+        ...plan,
+        is_current: plan.plan === nextPlan,
+      }));
+      workspaceDetailState = {
+        ...workspaceDetailState,
+        plan: nextPlan,
+      };
+      workspacesState = workspacesState.map((workspace) =>
+        workspace.id === workspaceDetailState?.id
+          ? {
+              ...workspace,
+              plan: workspaceDetailState.plan,
+            }
+          : workspace,
+      );
+
+      const selectedPlan = workspaceBillingPlansState.find((plan) => plan.plan === nextPlan);
+      const description = `${selectedPlan?.plan.charAt(0).toUpperCase()}${selectedPlan?.plan.slice(1)} — ${billingPeriod} (manual)`;
+      const amount = selectedPlan?.price_monthly ?? 0;
+
+      if (nextPlan === 'free') {
+        workspaceBillingState = {
+          ...workspaceBillingState,
+          plan: 'free',
+          subscription: null,
+          limits_usage: {
+            ...workspaceBillingState.limits_usage,
+            members: {
+              ...workspaceBillingState.limits_usage.members,
+              max: 5,
+            },
+            projects: {
+              ...workspaceBillingState.limits_usage.projects,
+              max: 1,
+            },
+          },
+          recent_payments: [],
+        };
+      } else {
+        workspaceBillingState = {
+          ...workspaceBillingState,
+          plan: nextPlan,
+          subscription: {
+            id: 'sub_next',
+            plan: nextPlan,
+            billing_period: billingPeriod,
+            status: 'active',
+            started_at: '2025-04-01T00:00:00Z',
+            expires_at: body?.expires_at ?? '2025-05-01T00:00:00Z',
+            cancelled_at: null,
+            auto_renew: false,
+            provider: 'manual',
+          },
+          limits_usage: {
+            ...workspaceBillingState.limits_usage,
+            members: {
+              ...workspaceBillingState.limits_usage.members,
+              max: selectedPlan?.limits.members ?? null,
+            },
+            projects: {
+              ...workspaceBillingState.limits_usage.projects,
+              max: selectedPlan?.limits.projects ?? null,
+            },
+          },
+          recent_payments: [
+          {
+            id: `pay_${nextPlan}`,
+            amount: `${amount}.00`,
+            currency: 'RUB',
+            status: 'paid',
+            paid_at: '2025-04-01T00:00:00Z',
+            payment_method_last4: '4242',
+            description,
+            created_at: '2025-04-01T00:00:00Z',
+          },
+          ...workspaceBillingState.recent_payments,
+          ],
+        };
+      }
+
+      return json(route, workspaceBillingState);
+    }
+
     // POST /workspaces/:id/invites
     if (method === 'POST' && /^\/workspaces\/[^/]+\/invites$/.test(path)) {
       return json(route, data.workspaceInviteLink, 201);
@@ -68,15 +204,36 @@ export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}
 
     // GET /workspaces/:id
     if (method === 'GET' && /^\/workspaces\/[^/]+$/.test(path)) {
-      if (data.workspaceDetail === null) {
+      if (workspaceDetailState === null) {
         return json(route, { message: 'Not found' }, 404);
       }
-      return json(route, data.workspaceDetail);
+      return json(route, workspaceDetailState);
     }
 
     // PATCH /workspaces/:id
     if (method === 'PATCH' && /^\/workspaces\/[^/]+$/.test(path)) {
-      return json(route, data.workspaceDetail ?? API_DATA.workspaceDetail);
+      if (workspaceDetailState === null) {
+        return json(route, { message: 'Not found' }, 404);
+      }
+
+      const body = route.request().postDataJSON() as Record<string, unknown> | null;
+      workspaceDetailState = {
+        ...workspaceDetailState,
+        ...(body ?? {}),
+      };
+      workspacesState = workspacesState.map((workspace) =>
+        workspace.id === workspaceDetailState?.id
+          ? {
+              ...workspace,
+              title: workspaceDetailState.title,
+              status: workspaceDetailState.status,
+              plan: workspaceDetailState.plan,
+              has_bot: workspaceDetailState.has_bot,
+            }
+          : workspace,
+      );
+
+      return json(route, workspaceDetailState);
     }
 
     // POST /invites/:token/accept

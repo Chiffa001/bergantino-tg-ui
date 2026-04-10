@@ -1,10 +1,13 @@
 import { requestJson } from '@/lib/fetch';
 
 import type {
+  AdminWorkspaceBillingPlanRequest,
   CreateWorkspaceInviteRequest,
   CreateWorkspaceRequest,
-  UpdateWorkspaceBotRequest,
+  UpdateWorkspaceRequest,
   Workspace,
+  WorkspaceBilling,
+  WorkspaceBillingPlan,
   WorkspaceDetail,
   WorkspaceInvite,
   WorkspaceUser,
@@ -45,11 +48,26 @@ export const createWorkspace = async (data: CreateWorkspaceRequest): Promise<Wor
   });
 };
 
-export const updateWorkspaceBot = async (
-  id: string,
-  data: UpdateWorkspaceBotRequest,
-): Promise<WorkspaceDetail> => {
+export const updateWorkspace = async (id: string, data: UpdateWorkspaceRequest): Promise<WorkspaceDetail> => {
   return requestJson<WorkspaceDetail>(`/workspaces/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+};
+
+export const getWorkspaceBilling = async (id: string): Promise<WorkspaceBilling> => {
+  return requestJson<WorkspaceBilling>(`/workspaces/${id}/billing`);
+};
+
+export const getWorkspaceBillingPlans = async (id: string): Promise<WorkspaceBillingPlan[]> => {
+  return requestJson<WorkspaceBillingPlan[]>(`/workspaces/${id}/billing/plans`);
+};
+
+export const adminOverrideWorkspaceBillingPlan = async (
+  id: string,
+  data: AdminWorkspaceBillingPlanRequest,
+): Promise<WorkspaceBilling> => {
+  return requestJson<WorkspaceBilling>(`/workspaces/${id}/billing/admin`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   });

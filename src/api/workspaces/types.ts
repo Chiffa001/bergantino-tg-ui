@@ -88,6 +88,84 @@ export type UpdateWorkspaceBotRequest = {
   bot_username: string | null;
 };
 
+export type UpdateWorkspaceRequest = Partial<{
+  title: string;
+  status: WorkspaceStatus;
+  bot_token: string | null;
+  bot_username: string | null;
+}>;
+
+export type WorkspaceBillingStatus =
+  | 'active'
+  | 'cancelled'
+  | 'expired'
+  | 'past_due'
+  | 'renewal_pending';
+
+export type WorkspaceBillingPeriod = 'monthly' | 'annual';
+export type WorkspaceBillingProvider = 'stripe' | 'yokassa' | 'manual';
+
+export type WorkspaceBillingLimitUsage = {
+  current: number;
+  max: number | null;
+};
+
+export type WorkspaceBillingLimitsUsage = {
+  members: WorkspaceBillingLimitUsage;
+  projects: WorkspaceBillingLimitUsage;
+};
+
+export type WorkspaceSubscription = {
+  id: string;
+  plan: WorkspacePlan;
+  billing_period: WorkspaceBillingPeriod;
+  status: WorkspaceBillingStatus;
+  started_at: string;
+  expires_at: string | null;
+  cancelled_at: string | null;
+  auto_renew: boolean;
+  provider: WorkspaceBillingProvider;
+};
+
+export type WorkspaceBilling = {
+  plan: WorkspacePlan;
+  fee_rate: string;
+  subscription: WorkspaceSubscription | null;
+  limits_usage: WorkspaceBillingLimitsUsage;
+  recent_payments: WorkspaceBillingPayment[];
+};
+
+export type WorkspaceBillingPlan = {
+  plan: WorkspacePlan;
+  price_monthly: number;
+  price_annual: number;
+  limits: {
+    members: number | null;
+    projects: number | null;
+    crypto: boolean;
+  };
+  is_current: boolean;
+};
+
+export type WorkspaceBillingPaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+
+export type WorkspaceBillingPayment = {
+  id: string;
+  amount: number | string;
+  currency: 'RUB' | 'USD';
+  status: WorkspaceBillingPaymentStatus;
+  paid_at: string | null;
+  payment_method_last4: string | null;
+  description: string;
+  created_at: string;
+};
+
+export type AdminWorkspaceBillingPlanRequest = {
+  plan: WorkspacePlan;
+  billing_period: WorkspaceBillingPeriod;
+  expires_at?: string | null;
+};
+
 export type WorkspaceInvite = {
   id: string;
   token: string;

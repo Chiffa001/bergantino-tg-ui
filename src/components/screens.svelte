@@ -7,6 +7,8 @@
   import InvitePage from '@/pages/invite-page.svelte';
   import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
+  import WorkspaceBillingPage from '@/pages/workspace-billing-page.svelte';
+  import WorkspaceChangePlanPage from '@/pages/workspace-change-plan-page.svelte';
   import WorkspaceDetailPage from '@/pages/workspace-detail-page.svelte';
   import WorkspaceSettingsPage from '@/pages/workspace-settings-page.svelte';
   import WorkspaceUsersPage from '@/pages/workspace-users-page.svelte';
@@ -59,6 +61,24 @@
   >
     {#snippet children({ params })}
       <WorkspaceSettingsPage id={params.id} />
+    {/snippet}
+  </Route>
+
+  <Route
+    path="/workspaces/:id/billing"
+    exact
+  >
+    {#snippet children({ params })}
+      <WorkspaceBillingPage id={params.id} />
+    {/snippet}
+  </Route>
+
+  <Route
+    path="/workspaces/:id/billing/change-plan"
+    exact
+  >
+    {#snippet children({ params })}
+      <WorkspaceChangePlanPage id={params.id} />
     {/snippet}
   </Route>
 

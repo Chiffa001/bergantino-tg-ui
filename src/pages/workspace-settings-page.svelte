@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Modal, Typography } from '@chiffa001/tg-svelte-ui';
 
-  import { createUpdateWorkspaceBotMutation, createWorkspaceDetailQuery } from '@/api/workspaces/queries';
+  import { createUpdateWorkspaceMutation, createWorkspaceDetailQuery } from '@/api/workspaces/queries';
   import Button from '@/components/ui/button.svelte';
   import PageHeader from '@/components/ui/page-header.svelte';
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
@@ -15,7 +15,7 @@
 
   const props: Props = $props();
   const query = createWorkspaceDetailQuery(() => props.id);
-  const mutation = createUpdateWorkspaceBotMutation(() => props.id);
+  const mutation = createUpdateWorkspaceMutation(() => props.id);
 
   let botFormOpen = $state(false);
   let disconnectOpen = $state(false);

@@ -3,17 +3,27 @@ import { createMutation, createQuery } from '@tanstack/svelte-query';
 import { queryClient } from '@/lib/query-client';
 
 import {
+  adminOverrideWorkspaceBillingPlan,
   createWorkspace,
   createWorkspaceInvite,
+  getWorkspaceBilling,
+  getWorkspaceBillingPlans,
   getWorkspaceDetail,
   getWorkspaces,
   getWorkspaceUsers,
-  updateWorkspaceBot,
+  updateWorkspace,
 } from './requests';
-import type { CreateWorkspaceInviteRequest, UpdateWorkspaceBotRequest, WorkspaceUsersFilters } from './types';
+import type {
+  AdminWorkspaceBillingPlanRequest,
+  CreateWorkspaceInviteRequest,
+  UpdateWorkspaceRequest,
+  WorkspaceUsersFilters,
+} from './types';
 
 export const workspacesQueryKey = ['workspaces'] as const;
 export const workspaceDetailQueryKey = (id: string) => ['workspace', id] as const;
+export const workspaceBillingQueryKey = (id: string) => ['workspaces', id, 'billing'] as const;
+export const workspaceBillingPlansQueryKey = (id: string) => ['workspaces', id, 'billing', 'plans'] as const;
 export const workspaceUsersQueryKey = (id: string, filters: WorkspaceUsersFilters) =>
   ['workspaces', id, 'users', filters] as const;
 
@@ -41,6 +51,20 @@ export const createWorkspaceUsersQuery = (
     staleTime: 30_000,
   }));
 
+export const createWorkspaceBillingQuery = (id: () => string) =>
+  createQuery(() => ({
+    queryFn: () => getWorkspaceBilling(id()),
+    queryKey: workspaceBillingQueryKey(id()),
+    staleTime: 30_000,
+  }));
+
+export const createWorkspaceBillingPlansQuery = (id: () => string) =>
+  createQuery(() => ({
+    queryFn: () => getWorkspaceBillingPlans(id()),
+    queryKey: workspaceBillingPlansQueryKey(id()),
+    staleTime: 30_000,
+  }));
+
 export const createWorkspaceMutation = () =>
   createMutation(() => ({
     mutationFn: createWorkspace,
@@ -54,11 +78,25 @@ export const createWorkspaceInviteMutation = (id: () => string) =>
     mutationFn: (data: CreateWorkspaceInviteRequest) => createWorkspaceInvite(id(), data),
   }));
 
-export const createUpdateWorkspaceBotMutation = (id: () => string) =>
+export const createUpdateWorkspaceMutation = (id: () => string) =>
   createMutation(() => ({
-    mutationFn: (data: UpdateWorkspaceBotRequest) => updateWorkspaceBot(id(), data),
+    mutationFn: (data: UpdateWorkspaceRequest) => updateWorkspace(id(), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceDetailQueryKey(id()) });
       queryClient.invalidateQueries({ queryKey: workspacesQueryKey });
+    },
+  }));
+
+export const createAdminOverrideWorkspaceBillingPlanMutation = (id: () => string) =>
+  createMutation(() => ({
+    mutationFn: (data: AdminWorkspaceBillingPlanRequest) =>
+      adminOverrideWorkspaceBillingPlan(id(), data),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: workspaceBillingQueryKey(id()) }),
+        queryClient.invalidateQueries({ queryKey: workspaceBillingPlansQueryKey(id()) }),
+        queryClient.invalidateQueries({ queryKey: workspaceDetailQueryKey(id()) }),
+        queryClient.invalidateQueries({ queryKey: workspacesQueryKey }),
+      ]);
     },
   }));

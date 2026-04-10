@@ -79,6 +79,100 @@ export const API_DATA = {
     bot_username: 'team_alpha_bot',
   },
 
+  workspaceBilling: {
+    plan: 'pro' as const,
+    fee_rate: '5.0',
+    subscription: {
+      id: 'sub_1',
+      plan: 'pro' as const,
+      billing_period: 'monthly' as const,
+      status: 'active' as const,
+      started_at: '2025-03-01T00:00:00Z',
+      expires_at: '2025-04-01T00:00:00Z',
+      cancelled_at: null,
+      auto_renew: true,
+      provider: 'manual' as const,
+    },
+    limits_usage: {
+      members: {
+        current: 35,
+        max: 50,
+      },
+      projects: {
+        current: 6,
+        max: null,
+      },
+    },
+    recent_payments: [
+      {
+        id: 'pay_1',
+        amount: '2490.00',
+        currency: 'RUB' as const,
+        status: 'paid' as const,
+        paid_at: '2025-03-01T00:00:00Z',
+        payment_method_last4: '4242',
+        description: 'Pro — ежемесячно',
+        created_at: '2025-03-01T00:00:00Z',
+      },
+      {
+        id: 'pay_2',
+        amount: '2490.00',
+        currency: 'RUB' as const,
+        status: 'paid' as const,
+        paid_at: '2025-02-01T00:00:00Z',
+        payment_method_last4: '4242',
+        description: 'Pro — ежемесячно',
+        created_at: '2025-02-01T00:00:00Z',
+      },
+      {
+        id: 'pay_3',
+        amount: '2490.00',
+        currency: 'RUB' as const,
+        status: 'paid' as const,
+        paid_at: '2025-01-01T00:00:00Z',
+        payment_method_last4: '4242',
+        description: 'Pro — ежемесячно',
+        created_at: '2025-01-01T00:00:00Z',
+      },
+    ],
+  },
+
+  workspaceBillingPlans: [
+    {
+      plan: 'free' as const,
+      price_monthly: 0,
+      price_annual: 0,
+      limits: {
+        members: 5,
+        projects: 1,
+        crypto: false,
+      },
+      is_current: false,
+    },
+    {
+      plan: 'pro' as const,
+      price_monthly: 2490,
+      price_annual: 24900,
+      limits: {
+        members: 50,
+        projects: null,
+        crypto: true,
+      },
+      is_current: true,
+    },
+    {
+      plan: 'business' as const,
+      price_monthly: 7490,
+      price_annual: 74900,
+      limits: {
+        members: null,
+        projects: null,
+        crypto: true,
+      },
+      is_current: false,
+    },
+  ],
+
   workspaceUsers: [
     {
       id: '10',
