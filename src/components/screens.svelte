@@ -4,6 +4,7 @@
   import CreateWorkspacePage from '@/pages/create-workspace-page.svelte';
   import ForbiddenPage from '@/pages/forbidden-page.svelte';
   import InternalServerErrorPage from '@/pages/internal-server-error-page.svelte';
+  import InvitePage from '@/pages/invite-page.svelte';
   import NotFoundPage from '@/pages/not-found-page.svelte';
   import NotInTelegramPage from '@/pages/not-in-telegram-page.svelte';
   import WorkspaceDetailPage from '@/pages/workspace-detail-page.svelte';
@@ -25,6 +26,15 @@
     exact
   >
     <WorkspacesPage />
+  </Route>
+
+  <Route
+    path="/invites/:token"
+    exact
+  >
+    {#snippet children({ params })}
+      <InvitePage token={params.token} />
+    {/snippet}
   </Route>
 
   <Route

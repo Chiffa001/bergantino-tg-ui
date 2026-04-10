@@ -2,7 +2,7 @@
   import { Modal, Typography } from '@chiffa001/tg-svelte-ui';
 
   import { createWorkspaceInviteMutation } from '@/api/workspaces/queries';
-  import type { WorkspaceInvite } from '@/api/workspaces/types';
+  import { WORKSPACE_ROLE, type WorkspaceInvite } from '@/api/workspaces/types';
   import Button from '@/components/ui/button.svelte';
   import { copyTextToClipboard } from '@/lib/copy-to-clipboard';
   import { formatDate } from '@/lib/format-date';
@@ -54,7 +54,7 @@
     isCopied = false;
 
     try {
-      invite = await mutation.mutateAsync({ role: 'assistant' });
+      invite = await mutation.mutateAsync({ role: WORKSPACE_ROLE.ASSISTANT });
     } catch (err) {
       const message = err instanceof Error ? err.message : '';
       errorMessage =

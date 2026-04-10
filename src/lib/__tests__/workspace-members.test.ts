@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { WORKSPACE_ROLE } from '@/api/workspaces/types';
+
 import {
   getWorkspaceMemberInitials,
   isWorkspaceMemberFilter,
@@ -25,9 +27,9 @@ describe('workspace-members', () => {
 
   it('recognizes valid workspace member filters', () => {
     expect(isWorkspaceMemberFilter('all')).toBe(true);
-    expect(isWorkspaceMemberFilter('workspace_admin')).toBe(true);
-    expect(isWorkspaceMemberFilter('assistant')).toBe(true);
-    expect(isWorkspaceMemberFilter('client')).toBe(true);
+    expect(isWorkspaceMemberFilter(WORKSPACE_ROLE.WORKSPACE_ADMIN)).toBe(true);
+    expect(isWorkspaceMemberFilter(WORKSPACE_ROLE.ASSISTANT)).toBe(true);
+    expect(isWorkspaceMemberFilter(WORKSPACE_ROLE.CLIENT)).toBe(true);
   });
 
   it('rejects invalid workspace member filters', () => {
@@ -38,7 +40,12 @@ describe('workspace-members', () => {
   });
 
   it('contains expected role labels and colors', () => {
-    expect(WORKSPACE_MEMBER_FILTERS).toEqual(['all', 'workspace_admin', 'assistant', 'client']);
+    expect(WORKSPACE_MEMBER_FILTERS).toEqual([
+      'all',
+      WORKSPACE_ROLE.WORKSPACE_ADMIN,
+      WORKSPACE_ROLE.ASSISTANT,
+      WORKSPACE_ROLE.CLIENT,
+    ]);
     expect(WORKSPACE_MEMBER_FILTER_LABELS.workspace_admin).toBe('Админ');
     expect(WORKSPACE_MEMBER_BADGE_LABELS.workspace_admin).toBe('Admin');
     expect(WORKSPACE_MEMBER_AVATAR_COLORS.assistant).toBe('#f59e0b');

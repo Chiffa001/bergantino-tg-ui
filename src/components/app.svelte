@@ -2,8 +2,11 @@
   import { PhoneMask } from '@chiffa001/tg-svelte-ui';
   import { Router } from '@chiffa001/tg-svelte-ui/router';
   import { QueryClientProvider } from '@tanstack/svelte-query';
+  import { retrieveLaunchParams } from '@tma.js/sdk-svelte';
+  import type { LaunchParams } from '@tma.js/types';
   import { onMount } from 'svelte';
 
+  import { parseInviteTokenFromStartParam } from '@/lib/invite';
   import { queryClient } from '@/lib/query-client';
   import { router } from '@/lib/router';
   import { setupTelegramSdk } from '@/lib/tma';
@@ -13,13 +16,28 @@
 
   const { cleanup, isInTelegram } = setupTelegramSdk();
 
+  function getInviteStartParam(): string | null {
+    try {
+      const params = retrieveLaunchParams() as LaunchParams;
+      return params.tgWebAppStartParam ?? params.tgWebAppData?.start_param ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   if (!isInTelegram) {
     router.navigate('/not-in-telegram', { replace: true });
   } else {
-    // TMA opens with Telegram params in the hash (#tgWebAppData=...),
-    // which the hash-mode router would misread as a non-matching path.
-    // Navigate to / so the router ignores the Telegram hash on start.
-    router.navigate('/');
+    const inviteToken = parseInviteTokenFromStartParam(getInviteStartParam());
+
+    if (inviteToken) {
+      router.navigate(`/invites/${inviteToken}`, { replace: true });
+    } else {
+      // TMA opens with Telegram params in the hash (#tgWebAppData=...),
+      // which the hash-mode router would misread as a non-matching path.
+      // Navigate to / so the router ignores the Telegram hash on start.
+      router.navigate('/', { replace: true });
+    }
   }
 
   onMount(() => {

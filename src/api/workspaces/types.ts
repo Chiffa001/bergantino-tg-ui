@@ -1,6 +1,18 @@
 export type WorkspaceStatus = 'active' | 'suspended' | 'archived';
-export type WorkspaceRole = 'workspace_admin' | 'assistant' | 'client';
-export type WorkspaceInviteRole = 'assistant';
+export const WORKSPACE_ROLE = {
+  ASSISTANT: 'assistant',
+  CLIENT: 'client',
+  WORKSPACE_ADMIN: 'workspace_admin',
+} as const;
+
+export type WorkspaceRole = (typeof WORKSPACE_ROLE)[keyof typeof WORKSPACE_ROLE];
+export type WorkspaceInviteRole = typeof WORKSPACE_ROLE.ASSISTANT;
+
+export const WORKSPACE_ROLE_LABELS: Record<WorkspaceRole, string> = {
+  [WORKSPACE_ROLE.WORKSPACE_ADMIN]: 'Админ',
+  [WORKSPACE_ROLE.ASSISTANT]: 'Помощник',
+  [WORKSPACE_ROLE.CLIENT]: 'Клиент',
+};
 
 export const WORKSPACE_STATUS_LABELS: Record<WorkspaceStatus, string> = {
   active: 'Active',

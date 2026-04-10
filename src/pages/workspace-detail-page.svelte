@@ -4,6 +4,7 @@
   import { createWorkspaceDetailQuery } from '@/api/workspaces/queries';
   import {
     WORKSPACE_PLAN_LABELS,
+    WORKSPACE_ROLE,
     WORKSPACE_STATUS_LABELS,
     type WorkspaceDetail,
   } from '@/api/workspaces/types';
@@ -14,6 +15,7 @@
   import InviteUserIcon from '@/icons/invite-user-icon.svelte';
   import PaymentCardIcon from '@/icons/payment-card-icon.svelte';
   import SettingsGearIcon from '@/icons/settings-gear-icon.svelte';
+  import { authStore } from '@/lib/auth';
   import { formatDate } from '@/lib/format-date';
   import { formatFeeRate } from '@/lib/format-fee-rate';
   import { router } from '@/lib/router';
@@ -24,6 +26,8 @@
 
   const props: Props = $props();
   const query = createWorkspaceDetailQuery(() => props.id);
+  const currentUser = authStore.getUser();
+  const canManageWorkspace = currentUser?.is_super_admin ?? false;
 
   const roleCards = $derived.by(() => {
     const data = query.data;
@@ -38,14 +42,14 @@
         count: data.members_count.assistant,
         initials: 'AS',
         label: 'Ассистенты',
-        key: 'assistant',
+        key: WORKSPACE_ROLE.ASSISTANT,
       },
       {
         color: '#16a34a',
         count: data.members_count.client,
         initials: 'CL',
         label: 'Клиенты',
-        key: 'client',
+        key: WORKSPACE_ROLE.CLIENT,
       },
     ];
   });
@@ -101,11 +105,14 @@
 
   const noop = () => undefined;
 
-  const actionItems: { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void }[] = [
-    { label: 'Настройки пространства', icon: 'settings', onclick: () => router.navigate(`/workspaces/${props.id}/settings`) },
-    { label: 'Оплата и тариф', icon: 'payment', onclick: noop },
-    { label: 'Пригласить участника', icon: 'invite', onclick: noop },
-  ];
+  const actionItems: { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void }[] =
+    canManageWorkspace
+      ? [
+        { label: 'Настройки пространства', icon: 'settings', onclick: () => router.navigate(`/workspaces/${props.id}/settings`) },
+        { label: 'Оплата и тариф', icon: 'payment', onclick: noop },
+        { label: 'Пригласить участника', icon: 'invite', onclick: noop },
+      ]
+      : [];
 
   const data = $derived(query.data as WorkspaceDetail | undefined);
 </script>
@@ -238,55 +245,57 @@
         </button>
       </section>
 
-      <section class="section">
-        <Typography
-          variant="title"
-          color="#171717"
-        >
-          Действия
-        </Typography>
+      {#if actionItems.length > 0}
+        <section class="section">
+          <Typography
+            variant="title"
+            color="#171717"
+          >
+            Действия
+          </Typography>
 
-        <RelatedList
-          items={actionItems}
-          itemAs="button"
-          itemClass="action-row"
-          getKey={(item) => item.label}
-          onitemclick={(item) => item.onclick()}
-        >
-          {#snippet children(item)}
-            <div class="action-row-content">
-              <div class="action-left">
+          <RelatedList
+            items={actionItems}
+            itemAs="button"
+            itemClass="action-row"
+            getKey={(item) => item.label}
+            onitemclick={(item) => item.onclick()}
+          >
+            {#snippet children(item)}
+              <div class="action-row-content">
+                <div class="action-left">
+                  <span
+                    class="action-icon"
+                    aria-hidden="true"
+                  >
+                    {#if item.icon === 'settings'}
+                      <SettingsGearIcon />
+                    {:else if item.icon === 'payment'}
+                      <PaymentCardIcon />
+                    {:else}
+                      <InviteUserIcon />
+                    {/if}
+                  </span>
+
+                  <Typography
+                    variant="body"
+                    color="#171717"
+                  >
+                    {item.label}
+                  </Typography>
+                </div>
+
                 <span
-                  class="action-icon"
+                  class="action-arrow"
                   aria-hidden="true"
                 >
-                  {#if item.icon === 'settings'}
-                    <SettingsGearIcon />
-                  {:else if item.icon === 'payment'}
-                    <PaymentCardIcon />
-                  {:else}
-                    <InviteUserIcon />
-                  {/if}
+                  <ChevronRightIcon />
                 </span>
-
-                <Typography
-                  variant="body"
-                  color="#171717"
-                >
-                  {item.label}
-                </Typography>
               </div>
-
-              <span
-                class="action-arrow"
-                aria-hidden="true"
-              >
-                <ChevronRightIcon />
-              </span>
-            </div>
-          {/snippet}
-        </RelatedList>
-      </section>
+            {/snippet}
+          </RelatedList>
+        </section>
+      {/if}
     </div>
   {/if}
 </section>

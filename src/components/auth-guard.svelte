@@ -1,9 +1,11 @@
 <script lang="ts">
   import { LoaderContainer } from '@chiffa001/tg-svelte-ui';
+  import { matchRoute } from '@chiffa001/tg-svelte-ui/router';
   import type { Snippet } from 'svelte';
 
   import { createAuthQuery } from '@/api/auth/queries';
   import { authStore } from '@/lib/auth';
+  import { isInviteRoute } from '@/lib/invite';
   import { router } from '@/lib/router';
 
   type Props = {
@@ -15,17 +17,32 @@
 
   let { children, isInTelegram }: Props = $props();
 
-  const query = createAuthQuery(() => isInTelegram && !PUBLIC_ROUTES.has(router.currentPath));
+  function isPublicRoute(path: string): boolean {
+    return PUBLIC_ROUTES.has(path) || isInviteRoute(path);
+  }
+
+  function canAccessAsInvitedMember(path: string): boolean {
+    const match = matchRoute('/workspaces/:id', path, true);
+
+    if (!match) {
+      return false;
+    }
+
+    return authStore.getInviteWorkspaceAccess() === match.params.id;
+  }
+
+  const query = createAuthQuery(() => isInTelegram && !isPublicRoute(router.currentPath));
 
   $effect(() => {
-    if (PUBLIC_ROUTES.has(router.currentPath)) {
+    if (isPublicRoute(router.currentPath)) {
       return;
     }
 
     if (query.isSuccess) {
       authStore.setToken(query.data.access_token);
+      authStore.setUser(query.data.user);
 
-      if (!query.data.user.is_super_admin) {
+      if (!query.data.user.is_super_admin && !canAccessAsInvitedMember(router.currentPath)) {
         router.navigate('/forbidden', { replace: true });
       }
 
@@ -44,7 +61,7 @@
   });
 </script>
 
-{#if PUBLIC_ROUTES.has(router.currentPath) || query.isSuccess}
+{#if isPublicRoute(router.currentPath) || query.isSuccess}
   {@render children()}
 {:else}
   <section class="auth-guard-loader">
