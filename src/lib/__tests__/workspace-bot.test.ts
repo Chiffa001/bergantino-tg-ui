@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildWorkspaceMiniAppUrl, normalizeBotUsername } from '../workspace-bot';
+import { buildWorkspaceMiniAppUrl, normalizeBotUsername, normalizeMiniAppUrl } from '../workspace-bot';
 
 describe('normalizeBotUsername', () => {
   it('trims whitespace', () => {
@@ -17,11 +17,29 @@ describe('normalizeBotUsername', () => {
 });
 
 describe('buildWorkspaceMiniAppUrl', () => {
-  it('builds a t.me url from username', () => {
+  it('builds a bot url when shortname is missing', () => {
     expect(buildWorkspaceMiniAppUrl('ClinicBot')).toBe('https://t.me/ClinicBot');
   });
 
   it('normalizes the username before building the url', () => {
     expect(buildWorkspaceMiniAppUrl('  @ClinicBot  ')).toBe('https://t.me/ClinicBot');
+  });
+
+  it('builds a mini app url when shortname is provided', () => {
+    expect(buildWorkspaceMiniAppUrl('ClinicBot', 'miniapp')).toBe('https://t.me/ClinicBot/miniapp');
+  });
+
+  it('reuses a full t.me path without duplicating the username', () => {
+    expect(buildWorkspaceMiniAppUrl('ClinicBot', 'https://t.me/ClinicBot/miniapp')).toBe(
+      'https://t.me/ClinicBot/miniapp',
+    );
+  });
+});
+
+describe('normalizeMiniAppUrl', () => {
+  it('trims whitespace', () => {
+    expect(normalizeMiniAppUrl('  https://t.me/ClinicBot/miniapp  ')).toBe(
+      'https://t.me/ClinicBot/miniapp',
+    );
   });
 });

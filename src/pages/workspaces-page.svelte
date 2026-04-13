@@ -6,6 +6,7 @@
   import Button from '@/components/ui/button.svelte';
   import WorkspaceCard from '@/components/workspaces/workspace-card.svelte';
   import { router } from '@/lib/router';
+  import { setStoredWorkspaceSlug } from '@/lib/workspace-context';
 
   type Filter = 'all' | WorkspaceStatus;
 
@@ -26,8 +27,21 @@
     ),
   );
 
+  $effect(() => {
+    if (!query.isSuccess || !query.data || query.data.length !== 1) {
+      return;
+    }
+
+    const [workspace] = query.data;
+    setStoredWorkspaceSlug(workspace.slug);
+    router.navigate(`/workspaces/${workspace.id}`, { replace: true });
+  });
+
   const handleCreate = () => router.navigate('/workspaces/new');
-  const handleCard = (id: string) => router.navigate(`/workspaces/${id}`);
+  const handleCard = (id: string, slug: string) => {
+    setStoredWorkspaceSlug(slug);
+    router.navigate(`/workspaces/${id}`);
+  };
 </script>
 
 <section class="workspaces-page">
@@ -120,7 +134,7 @@
           <li>
             <WorkspaceCard
               workspace={ws}
-              onclick={() => handleCard(ws.id)}
+              onclick={() => handleCard(ws.id, ws.slug)}
             />
           </li>
         {/each}

@@ -10,6 +10,7 @@
   import PlanCard from '@/components/billing/plan-card.svelte';
   import PageHeader from '@/components/ui/page-header.svelte';
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
+  import { authStore } from '@/lib/auth';
   import { router } from '@/lib/router';
   import { toBillingPlanView } from '@/lib/workspace-billing';
 
@@ -21,6 +22,8 @@
   const billingQuery = createWorkspaceBillingQuery(() => props.id);
   const plansQuery = createWorkspaceBillingPlansQuery(() => props.id);
   const mutation = createAdminOverrideWorkspaceBillingPlanMutation(() => props.id);
+  const currentUser = authStore.getUser();
+  const canChangePlan = currentUser?.is_super_admin ?? false;
 
   const currentPlan = $derived(billingQuery.data?.plan ?? null);
   const planViews = $derived(
@@ -44,7 +47,7 @@
   }
 
   async function handleSelectPlan(plan: WorkspacePlan) {
-    if (plan === currentPlan || mutation.isPending) {
+    if (!canChangePlan || plan === currentPlan || mutation.isPending) {
       return;
     }
 
@@ -79,26 +82,45 @@
     />
   {:else}
     <div class="stack">
-      <Typography
-        variant="body"
-        color="#737373"
-      >
-        Выберите подходящий тариф для вашего пространства
-      </Typography>
+      {#if canChangePlan}
+        <Typography
+          variant="body"
+          color="#737373"
+        >
+          Выберите подходящий тариф для вашего пространства
+        </Typography>
 
-      {#each planViews as plan (plan.value)}
-        <PlanCard
-          plan={plan}
-          highlighted={plan.value === currentPlan}
-          badgeText={plan.value === currentPlan ? 'Текущий' : ''}
-          pricePosition={plan.value === currentPlan ? 'below-title' : 'top-right'}
-          showFeatures
-          actionLabel={plan.value === currentPlan ? '' : `Перейти на ${plan.label}`}
-          actionLoading={savingPlan === plan.value}
-          actionDisabled={mutation.isPending}
-          onaction={() => handleSelectPlan(plan.value)}
-        />
-      {/each}
+        {#each planViews as plan (plan.value)}
+          <PlanCard
+            plan={plan}
+            highlighted={plan.value === currentPlan}
+            badgeText={plan.value === currentPlan ? 'Текущий' : ''}
+            pricePosition={plan.value === currentPlan ? 'below-title' : 'top-right'}
+            showFeatures
+            actionLabel={plan.value === currentPlan ? '' : `Перейти на ${plan.label}`}
+            actionLoading={savingPlan === plan.value}
+            actionDisabled={mutation.isPending}
+            onaction={() => handleSelectPlan(plan.value)}
+          />
+        {/each}
+      {:else}
+        <div class="coming-soon-card">
+          <Typography
+            variant="title"
+            color="#171717"
+          >
+            Смена тарифа скоро
+          </Typography>
+
+          <Typography
+            variant="body"
+            color="#737373"
+          >
+            Для администраторов workspace этот экран станет доступен после появления отдельного
+            endpoint-а `PATCH /workspaces/:id/billing/plan`.
+          </Typography>
+        </div>
+      {/if}
     </div>
   {/if}
 </section>
@@ -163,6 +185,20 @@
     height: 182px;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
+  }
+
+  .coming-soon-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    background: #ffffff;
+  }
+
+  .coming-soon-card :global(p) {
+    margin: 0;
   }
 
   @keyframes shimmer {

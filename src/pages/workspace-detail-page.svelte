@@ -19,6 +19,7 @@
   import { formatDate } from '@/lib/format-date';
   import { formatFeeRate } from '@/lib/format-fee-rate';
   import { router } from '@/lib/router';
+  import { setStoredWorkspaceSlug } from '@/lib/workspace-context';
 
   type Props = {
     id: string;
@@ -113,6 +114,14 @@
       : [];
 
   const data = $derived(query.data as WorkspaceDetail | undefined);
+
+  $effect(() => {
+    if (!data?.slug) {
+      return;
+    }
+
+    setStoredWorkspaceSlug(data.slug);
+  });
 </script>
 
 <section class="workspace-detail-page">

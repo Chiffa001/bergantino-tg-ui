@@ -7,7 +7,11 @@
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
   import RelatedList from '@/components/ui/related-list.svelte';
   import { router } from '@/lib/router';
-  import { buildWorkspaceMiniAppUrl, normalizeBotUsername } from '@/lib/workspace-bot';
+  import {
+    buildWorkspaceMiniAppUrl,
+    normalizeBotUsername,
+    normalizeMiniAppUrl,
+  } from '@/lib/workspace-bot';
 
   type Props = {
     id: string;
@@ -21,14 +25,25 @@
   let disconnectOpen = $state(false);
   let tokenField = $state('');
   let usernameField = $state('');
+  let miniAppUrlField = $state('');
   let tokenError = $state<string | null>(null);
   let saveSuccess = $state(false);
 
   const normalizedUsername = $derived(normalizeBotUsername(usernameField));
-  const miniAppUrl = $derived(
-    normalizedUsername.length > 0 ? buildWorkspaceMiniAppUrl(normalizedUsername) : '',
+  const normalizedMiniAppUrl = $derived(normalizeMiniAppUrl(miniAppUrlField));
+  const miniAppUrlPreview = $derived(
+    normalizedUsername.length > 0
+      ? buildWorkspaceMiniAppUrl(
+        normalizedUsername,
+        normalizedMiniAppUrl || '<mini_app_shortname>',
+      )
+      : '',
   );
-  const formValid = $derived(tokenField.trim().length > 0 && normalizedUsername.length > 0);
+  const formValid = $derived(
+    tokenField.trim().length > 0 &&
+      normalizedUsername.length > 0 &&
+      normalizedMiniAppUrl.length > 0,
+  );
 
   const data = $derived(query.data);
   const hasBot = $derived(data?.has_bot ?? false);
@@ -54,6 +69,7 @@
     botFormOpen = true;
     tokenField = '';
     usernameField = data?.bot_username ?? '';
+    miniAppUrlField = data?.mini_app_url ?? '';
     tokenError = null;
     saveSuccess = false;
   }
@@ -62,6 +78,7 @@
     botFormOpen = false;
     tokenField = '';
     usernameField = '';
+    miniAppUrlField = '';
     tokenError = null;
   }
 
@@ -74,12 +91,14 @@
       await mutation.mutateAsync({
         bot_token: tokenField.trim(),
         bot_username: normalizedUsername,
+        mini_app_url: normalizedMiniAppUrl,
       });
 
       botFormOpen = false;
       saveSuccess = true;
       tokenField = '';
       usernameField = '';
+      miniAppUrlField = '';
     } catch (err) {
       const error = err as Error;
 
@@ -98,6 +117,7 @@
       await mutation.mutateAsync({
         bot_token: null,
         bot_username: null,
+        mini_app_url: null,
       });
     } catch {
       router.navigate('/internal-server-error', { replace: true });
@@ -267,7 +287,33 @@
                 variant="caption"
                 color="#a3a3a3"
               >
-                Mini App URL строится автоматически: {miniAppUrl || 'https://t.me/<bot_username>'}
+                Укажите полный Mini App URL, который использует ваш workspace-бот.
+              </Typography>
+            </div>
+
+            <div class="field">
+              <label class="field-label">
+                <Typography
+                  variant="caption"
+                  color="#737373"
+                >
+                  Mini App URL
+                </Typography>
+              </label>
+
+              <input
+                class="input"
+                type="url"
+                placeholder="https://t.me/ClinicBot/miniapp"
+                autocomplete="off"
+                bind:value={miniAppUrlField}
+              />
+
+              <Typography
+                variant="caption"
+                color="#a3a3a3"
+              >
+                Пример: {miniAppUrlPreview || 'https://t.me/<bot_username>/<mini_app_shortname>'}
               </Typography>
             </div>
 
@@ -312,7 +358,7 @@
                 variant="caption"
                 color="#737373"
               >
-                {data.bot_username ? buildWorkspaceMiniAppUrl(data.bot_username) : ''}
+                {data.mini_app_url || (data.bot_username ? buildWorkspaceMiniAppUrl(data.bot_username) : '')}
               </Typography>
             </div>
 

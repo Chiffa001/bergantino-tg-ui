@@ -1,4 +1,5 @@
 import type { CurrentUser } from '@/api/auth/types';
+import { clearStoredWorkspaceSlug } from '@/lib/workspace-context';
 
 const TOKEN_KEY = 'access_token';
 const USER_KEY = 'current_user';
@@ -20,6 +21,7 @@ export const authStore = {
   clear: () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    clearStoredWorkspaceSlug();
     sessionStorage.removeItem(INVITE_WORKSPACE_ACCESS_KEY);
   },
   clearInviteWorkspaceAccess: () => {

@@ -9,6 +9,7 @@
   import Button from '@/components/ui/button.svelte';
   import PageHeader from '@/components/ui/page-header.svelte';
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
+  import { authStore } from '@/lib/auth';
   import { router } from '@/lib/router';
   import {
     getBillingStatusLabel,
@@ -25,6 +26,8 @@
   const props: Props = $props();
   const billingQuery = createWorkspaceBillingQuery(() => props.id);
   const plansQuery = createWorkspaceBillingPlansQuery(() => props.id);
+  const currentUser = authStore.getUser();
+  const canChangePlan = currentUser?.is_super_admin ?? false;
 
   const billing = $derived(billingQuery.data);
   const currentPlan = $derived(
@@ -111,12 +114,22 @@
               </Typography>
 
               {#if row.key === 'autopay'}
-                <span
-                  class={`switch ${row.value === 'Включено' ? 'switch--on' : ''}`.trim()}
-                  aria-label={row.value}
-                >
-                  <span class="switch-thumb"></span>
-                </span>
+                <div class="autopay-value">
+                  <span
+                    class={`switch ${row.value === 'Включено' ? 'switch--on' : ''} switch--disabled`.trim()}
+                    aria-label={`${row.value}. Скоро`}
+                    aria-disabled="true"
+                  >
+                    <span class="switch-thumb"></span>
+                  </span>
+
+                  <Typography
+                    variant="caption"
+                    color="#a3a3a3"
+                  >
+                    Скоро
+                  </Typography>
+                </div>
               {:else}
                 <Typography
                   variant="caption"
@@ -193,9 +206,10 @@
       <Button
         variant="secondary"
         class="change-plan-button"
+        disabled={!canChangePlan}
         onclick={handleChangePlan}
       >
-        Сменить тариф
+        {canChangePlan ? 'Сменить тариф' : 'Смена тарифа скоро'}
       </Button>
     </div>
   {/if}
@@ -255,6 +269,17 @@
   .history-row {
     min-height: 48px;
     padding: 0 14px;
+  }
+
+  .autopay-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .switch--disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 
   .info-row--bordered,
