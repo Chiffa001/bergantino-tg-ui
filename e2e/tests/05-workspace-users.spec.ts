@@ -111,10 +111,95 @@ test('показывает пустое состояние "Ничего не н
 test('открывает модал приглашения', async ({ page, navigate }) => {
   await navigate('/workspaces/1/users');
 
-  await page.getByRole('button', { name: 'Добавить пользователя' }).click();
+  await page.getByRole('button', { name: 'Пригласить пользователя' }).click();
 
-  // InviteUserModal renders with heading "Добавить пользователя" (no dialog role)
-  await expect(page.getByText('Добавить пользователя')).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText('Пригласить пользователя')).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText('Управление пространством, оплатой, приглашениями')).toBeVisible();
+  await expect(page.getByText('Работа с проектами, клиентами и событиями')).toBeVisible();
+  await expect(page.getByText('Просмотр своего прогресса и программы')).toBeVisible();
 
   await saveScreenshot(page, '05-workspace-users-invite-modal');
+});
+
+test.describe('при достигнутом лимите участников', () => {
+  test.use({
+    apiOverrides: {
+      workspaceBilling: {
+        plan: 'free',
+        subscription: null,
+        limits_usage: {
+          members: {
+            current: 5,
+            max: 5,
+          },
+          projects: {
+            current: 1,
+            max: 1,
+          },
+        },
+        recent_payments: [],
+      },
+    },
+  });
+
+  test('блокирует кнопку приглашения при достигнутом лимите участников', async ({ page, navigate }) => {
+    await navigate('/workspaces/1/users');
+
+    await expect(page.getByRole('button', { name: 'Достигнут лимит участников' })).toBeDisabled();
+  });
+});
+
+test('показывает inline-ошибку лимита тарифа в модалке приглашения', async ({ page, navigate }) => {
+  await page.route('http://localhost:8000/workspaces/1/invites', async (route) => {
+    await route.fulfill({
+      status: 403,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: 'plan_limit_exceeded',
+        detail: {
+          current: 5,
+          limit: 5,
+          plan: 'free',
+        },
+      }),
+    });
+  });
+
+  await navigate('/workspaces/1/users');
+  await page.getByRole('button', { name: 'Пригласить пользователя' }).click();
+  await page.getByRole('button', { name: 'Получить ссылку' }).click();
+
+  await expect(page.getByText('Достигнут лимит участников')).toBeVisible();
+  await expect(page.getByText('В вашем тарифе «Free» максимум 5 участников, все слоты заняты.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Сменить тариф' })).toBeVisible();
+});
+
+test('после копирования ссылки модалка остаётся открытой и кнопка показывает статус', async ({
+  page,
+  navigate,
+}) => {
+  await navigate('/workspaces/1/users');
+
+  await page.evaluate(() => {
+    Object.defineProperty(window.navigator, 'clipboard', {
+      configurable: true,
+      value: {
+        writeText: async () => undefined,
+      },
+    });
+  });
+
+  await page.getByRole('button', { name: 'Пригласить пользователя' }).click();
+  await page.getByRole('button', { name: 'Получить ссылку' }).click();
+  await page.getByRole('button', { name: 'Поделиться' }).click();
+
+  await expect(page.getByText('Пригласить пользователя')).toBeVisible();
+  const copiedButton = page.getByRole('button', { name: 'Скопировано' });
+  const copiedCheck = page.locator('.copied-check');
+
+  await expect(copiedButton).toBeVisible();
+  await expect(copiedButton).toBeDisabled();
+  await expect(copiedCheck).toBeVisible();
+  await expect(copiedButton).toHaveCSS('background-color', 'rgb(22, 163, 74)');
+  await expect(copiedCheck).toHaveCSS('color', 'rgb(255, 255, 255)');
 });

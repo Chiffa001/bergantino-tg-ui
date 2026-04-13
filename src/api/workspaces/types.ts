@@ -6,7 +6,7 @@ export const WORKSPACE_ROLE = {
 } as const;
 
 export type WorkspaceRole = (typeof WORKSPACE_ROLE)[keyof typeof WORKSPACE_ROLE];
-export type WorkspaceInviteRole = typeof WORKSPACE_ROLE.ASSISTANT;
+export type WorkspaceInviteRole = WorkspaceRole;
 
 export const WORKSPACE_ROLE_LABELS: Record<WorkspaceRole, string> = {
   [WORKSPACE_ROLE.WORKSPACE_ADMIN]: 'Админ',

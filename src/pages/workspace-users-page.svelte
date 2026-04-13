@@ -2,8 +2,9 @@
   import { Typography } from '@chiffa001/tg-svelte-ui';
   import { onDestroy } from 'svelte';
 
-  import { createWorkspaceUsersQuery } from '@/api/workspaces/queries';
+  import { createWorkspaceBillingQuery, createWorkspaceUsersQuery } from '@/api/workspaces/queries';
   import type { WorkspaceUser, WorkspaceUsersFilters } from '@/api/workspaces/types';
+  import IconButton from '@/components/ui/icon-button.svelte';
   import PageHeader from '@/components/ui/page-header.svelte';
   import QueryErrorState from '@/components/ui/query-error-state.svelte';
   import RelatedList from '@/components/ui/related-list.svelte';
@@ -12,13 +13,17 @@
   import SearchIcon from '@/icons/search-icon.svelte';
   import UserPlusIcon from '@/icons/user-plus-icon.svelte';
   import UsersEmptyIcon from '@/icons/users-empty-icon.svelte';
+  import { authStore } from '@/lib/auth';
   import { router } from '@/lib/router';
+  import { hasReachedMembersLimit } from '@/lib/workspace-invite-limits';
+  import { canInviteUsers, getAllowedInviteRoles } from '@/lib/workspace-invites';
   import {
     isWorkspaceMemberFilter,
     WORKSPACE_MEMBER_FILTER_LABELS,
     WORKSPACE_MEMBER_FILTERS,
     type WorkspaceMemberFilter,
   } from '@/lib/workspace-members';
+  import { buildWorkspaceUsersRoute } from '@/lib/workspace-users-route';
 
   type Props = {
     id: string;
@@ -54,25 +59,21 @@
     () => props.id,
     () => filters,
   );
+  const billingQuery = createWorkspaceBillingQuery(() => props.id);
   const members = $derived(query.data ?? []);
+  const currentUser = authStore.getUser();
+  const currentWorkspaceRole = $derived(
+    currentUser ? members.find((member) => member.id === currentUser.id)?.role ?? null : null,
+  );
+  const allowedInviteRoles = $derived(getAllowedInviteRoles(currentUser, currentWorkspaceRole));
+  const showInviteButton = $derived(canInviteUsers(currentUser, currentWorkspaceRole));
+  const inviteLimitReached = $derived(
+    hasReachedMembersLimit(billingQuery.data?.limits_usage.members),
+  );
 
   onDestroy(() => {
     clearTimeout(searchDebounce);
   });
-
-  function buildUsersRoute(filter: WorkspaceMemberFilter, search: string): string {
-    const params: string[] = [];
-
-    if (filter !== 'all') {
-      params.push(`role=${encodeURIComponent(filter)}`);
-    }
-
-    if (search) {
-      params.push(`search=${encodeURIComponent(search)}`);
-    }
-
-    return `/workspaces/${props.id}/users${params.length > 0 ? `?${params.join('&')}` : ''}`;
-  }
 
   function handleBack() {
     router.navigate(`/workspaces/${props.id}`);
@@ -91,13 +92,13 @@
 
     clearTimeout(searchDebounce);
     searchDebounce = setTimeout(() => {
-      router.navigate(buildUsersRoute(activeFilter, nextSearch), { replace: true });
+      router.navigate(buildWorkspaceUsersRoute(props.id, activeFilter, nextSearch), { replace: true });
     }, 300);
   }
 
   function handleFilterChange(filter: WorkspaceMemberFilter) {
     const search = searchInputElement?.value.trim() ?? normalizedSearch;
-    router.navigate(buildUsersRoute(filter, search));
+    router.navigate(buildWorkspaceUsersRoute(props.id, filter, search));
   }
 
   const emptyStateCopy = $derived.by(() => {
@@ -121,16 +122,19 @@
     onback={handleBack}
   >
     {#snippet actions()}
-      <button
-        class="add-button"
-        type="button"
-        aria-label="Добавить пользователя"
-        onclick={() => {
-          isInviteModalOpen = true;
-        }}
-      >
-        <UserPlusIcon />
-      </button>
+      {#if showInviteButton}
+        <IconButton
+          ariaLabel={inviteLimitReached ? 'Достигнут лимит участников' : 'Пригласить пользователя'}
+          class="add-button"
+          disabled={inviteLimitReached}
+          title={inviteLimitReached ? 'Достигнут лимит участников' : undefined}
+          onclick={() => {
+            isInviteModalOpen = true;
+          }}
+        >
+          <UserPlusIcon />
+        </IconButton>
+      {/if}
     {/snippet}
   </PageHeader>
 
@@ -237,6 +241,7 @@
   {/if}
 
   <InviteUserModal
+    allowedRoles={allowedInviteRoles}
     isOpen={isInviteModalOpen}
     workspaceId={props.id}
     onClose={() => {
@@ -259,16 +264,7 @@
   }
 
   .add-button {
-    display: flex;
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    padding: 0;
-    background: transparent;
-    cursor: pointer;
+    color: inherit;
   }
 
   .stack {

@@ -2,69 +2,106 @@
   import { Modal, Typography } from '@chiffa001/tg-svelte-ui';
 
   import { createWorkspaceInviteMutation } from '@/api/workspaces/queries';
-  import { WORKSPACE_ROLE, type WorkspaceInvite } from '@/api/workspaces/types';
+  import type { WorkspaceInvite, WorkspaceInviteRole } from '@/api/workspaces/types';
   import Button from '@/components/ui/button.svelte';
+  import RadioCardOption from '@/components/ui/radio-card-option.svelte';
   import { copyTextToClipboard } from '@/lib/copy-to-clipboard';
-  import { formatDate } from '@/lib/format-date';
   import { formatInviteExpirationDays } from '@/lib/invite-expiration';
+  import { router } from '@/lib/router';
+  import {
+    getPlanLimitExceededDetail,
+    getPlanLimitExceededMessage,
+    type PlanLimitExceededDetail,
+  } from '@/lib/workspace-invite-limits';
+  import {
+    getWorkspaceInviteRoleLabel,
+    WORKSPACE_INVITE_ROLE_DESCRIPTIONS,
+  } from '@/lib/workspace-invites';
 
   type Props = {
+    allowedRoles: WorkspaceInviteRole[];
     isOpen: boolean;
     workspaceId: string;
     onClose: () => void;
   };
 
-  const { isOpen, workspaceId, onClose }: Props = $props();
+  const { allowedRoles, isOpen, workspaceId, onClose }: Props = $props();
 
   const mutation = createWorkspaceInviteMutation(() => workspaceId);
 
   let invite = $state<WorkspaceInvite | null>(null);
-  let errorMessage = $state('');
   let isCopied = $state(false);
-  let wasOpened = $state(false);
+  let errorMessage = $state('');
+  let planLimitExceeded = $state<PlanLimitExceededDetail | null>(null);
+  let selectedRole = $state<WorkspaceInviteRole | null>(null);
+  let wasOpen = $state(false);
 
   $effect(() => {
     if (!isOpen) {
-      wasOpened = false;
+      wasOpen = false;
       invite = null;
-      errorMessage = '';
       isCopied = false;
+      errorMessage = '';
+      planLimitExceeded = null;
       mutation.reset();
       return;
     }
 
-    if (wasOpened) {
-      return;
+    if (!wasOpen) {
+      invite = null;
+      isCopied = false;
+      errorMessage = '';
+      planLimitExceeded = null;
+      mutation.reset();
+      wasOpen = true;
     }
 
-    wasOpened = true;
-    invite = null;
-    errorMessage = '';
-    isCopied = false;
-    mutation.reset();
-    void createInvite();
+    if (!selectedRole || !allowedRoles.includes(selectedRole)) {
+      selectedRole = allowedRoles[0] ?? null;
+    }
   });
 
   async function createInvite() {
-    if (mutation.isPending) {
+    if (mutation.isPending || !selectedRole) {
       return;
     }
 
     errorMessage = '';
+    invite = null;
     isCopied = false;
+    planLimitExceeded = null;
 
     try {
-      invite = await mutation.mutateAsync({ role: WORKSPACE_ROLE.ASSISTANT });
+      invite = await mutation.mutateAsync({ role: selectedRole });
     } catch (err) {
+      const limitDetail = getPlanLimitExceededDetail(err);
+
+      if (limitDetail) {
+        planLimitExceeded = limitDetail;
+        return;
+      }
+
       const message = err instanceof Error ? err.message : '';
       errorMessage =
-        message === 'server_error'
-          ? 'Сервис временно недоступен. Попробуйте снова чуть позже.'
-          : 'Не удалось создать ссылку-приглашение. Попробуйте снова.';
+        message === 'client_error'
+          ? 'Не удалось создать ссылку для выбранной роли. Попробуйте ещё раз.'
+          : 'Сервис временно недоступен. Попробуйте снова чуть позже.';
     }
   }
 
-  async function copyInviteLink() {
+  function handleRoleSelect(role: WorkspaceInviteRole) {
+    if (!allowedRoles.includes(role) || mutation.isPending) {
+      return;
+    }
+
+    selectedRole = role;
+    errorMessage = '';
+    invite = null;
+    isCopied = false;
+    planLimitExceeded = null;
+  }
+
+  async function shareInviteLink() {
     if (!invite) {
       return;
     }
@@ -72,13 +109,21 @@
     try {
       await copyTextToClipboard(invite.invite_url);
       isCopied = true;
+      errorMessage = '';
     } catch {
       errorMessage = 'Не удалось скопировать ссылку. Попробуйте снова.';
     }
   }
 
-  const expiresLabel = $derived(invite ? formatDate(invite.expires_at) : '');
-  const daysUntilExpirationLabel = $derived(invite ? formatInviteExpirationDays(invite.expires_at) : '');
+  const daysUntilExpirationLabel = $derived(
+    invite ? formatInviteExpirationDays(invite.expires_at) : '',
+  );
+  const selectedRoleLabel = $derived(
+    selectedRole ? getWorkspaceInviteRoleLabel(selectedRole) : '',
+  );
+  const planLimitExceededMessage = $derived(
+    planLimitExceeded ? getPlanLimitExceededMessage(planLimitExceeded) : '',
+  );
 </script>
 
 <Modal
@@ -92,29 +137,24 @@
         variant="h2"
         color="#0a0a0a"
       >
-        Добавить пользователя
+        Пригласить пользователя
       </Typography>
 
-      {#if mutation.isPending}
+      {#if mutation.isPending || invite}
+        <span class="role-badge">
+          <Typography
+            variant="caption"
+            color="#4f46e5"
+          >
+            Роль: {selectedRoleLabel}
+          </Typography>
+        </span>
+      {:else if !planLimitExceeded}
         <Typography
           variant="body"
-          color="#737373"
+          color={errorMessage ? '#dc2626' : '#737373'}
         >
-          Создание ссылки...
-        </Typography>
-      {:else if errorMessage}
-        <Typography
-          variant="body"
-          color="#dc2626"
-        >
-          {errorMessage}
-        </Typography>
-      {:else if invite}
-        <Typography
-          variant="body"
-          color="#737373"
-        >
-          Ссылка действительна {daysUntilExpirationLabel}, до {expiresLabel}
+          {errorMessage || 'Выберите роль для нового участника'}
         </Typography>
       {/if}
     </div>
@@ -125,66 +165,110 @@
           class="spinner"
           aria-hidden="true"
         ></span>
+
+        <Typography
+          variant="body"
+          color="#737373"
+        >
+          Создание ссылки...
+        </Typography>
+      </div>
+    {:else if invite}
+      <div class="invite-ready">
+        <div class="invite-card">
+          <Typography
+            variant="caption"
+            color="#171717"
+          >
+            🔗 {invite.invite_url}
+          </Typography>
+        </div>
+
+        <Typography
+          variant="caption"
+          color="#737373"
+        >
+          Ссылка действительна {daysUntilExpirationLabel}
+        </Typography>
+      </div>
+    {:else if planLimitExceeded}
+      <div class="limit-block">
+        <Typography
+          variant="body"
+          color="#dc2626"
+        >
+          Достигнут лимит участников
+        </Typography>
+
+        <Typography
+          variant="caption"
+          color="#7f1d1d"
+        >
+          {planLimitExceededMessage}
+        </Typography>
+      </div>
+    {:else}
+      <div class="role-list">
+        {#each allowedRoles as role (role)}
+          <RadioCardOption
+            checked={selectedRole === role}
+            title={getWorkspaceInviteRoleLabel(role)}
+            description={WORKSPACE_INVITE_ROLE_DESCRIPTIONS[role]}
+            onclick={() => handleRoleSelect(role)}
+          />
+        {/each}
       </div>
     {/if}
 
-    {#if invite}
-      <button
-        class="invite-card"
-        type="button"
-        onclick={() => {
-          void copyInviteLink();
-        }}
-      >
-        <Typography
-          variant="caption"
-          size={14}
-          color="#737373"
-        >
-          🔗 {invite.invite_url}
-        </Typography>
-      </button>
-    {/if}
-
     <div class="invite-actions">
-      {#if errorMessage}
-        <Button
-          onclick={() => {
-            void createInvite();
-          }}
-        >
-          Попробовать снова
-        </Button>
-      {:else if invite}
-        <Button
-          variant={isCopied ? 'success' : 'default'}
-          onclick={() => {
-            void copyInviteLink();
-          }}
-          disabled={isCopied}
-        >
-          {#if isCopied}
-            <span class="success-button-label">
-              <span class="success-button-text">Скопировано</span>
-              <span class="success-icon-check">✓</span>
-            </span>
-          {:else}
-            Поделиться
-          {/if}
-        </Button>
-      {:else}
+      {#if mutation.isPending}
         <Button
           variant="secondary"
           disabled={true}
         >
           Поделиться
         </Button>
+      {:else if invite}
+        {#if isCopied}
+          <Button
+            variant="success"
+            disabled={true}
+          >
+            <span class="copied-content">
+              <span
+                class="copied-check"
+                aria-hidden="true"
+              >✓</span>
+              <span>Скопировано</span>
+            </span>
+          </Button>
+        {:else}
+          <Button onclick={() => void shareInviteLink()}>
+            Поделиться
+          </Button>
+        {/if}
+      {:else if planLimitExceeded}
+        <Button
+          onclick={() => {
+            router.navigate(`/workspaces/${workspaceId}/billing/change-plan`);
+          }}
+        >
+          Сменить тариф
+        </Button>
+      {:else}
+        <Button
+          disabled={!selectedRole}
+          onclick={() => {
+            void createInvite();
+          }}
+        >
+          Получить ссылку
+        </Button>
       {/if}
 
       <Button
         variant="ghost"
         onclick={onClose}
-        disabled={mutation.isPending && !invite}
       >
         Закрыть
       </Button>
@@ -198,7 +282,7 @@
     width: 100%;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     box-sizing: border-box;
   }
 
@@ -226,12 +310,47 @@
     line-height: 1.4;
   }
 
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef2ff;
+  }
+
+  .role-list,
+  .invite-ready {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .limit-block {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    background: #fef2f2;
+    box-sizing: border-box;
+  }
+
+  .limit-block :global(p) {
+    margin: 0;
+  }
+
   .loading-area {
     display: flex;
     width: 100%;
     min-height: 120px;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 12px;
   }
 
   .spinner {
@@ -248,25 +367,9 @@
     width: 100%;
     box-sizing: border-box;
     padding: 16px 14px;
-    border: 0;
     border-radius: 10px;
     background: #f5f5f5;
     overflow: hidden;
-    text-overflow: ellipsis;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-  }
-
-  .invite-card :global(span) {
-    line-height: 1.45;
-  }
-
-  .invite-card:hover {
-    background: #e5e5e5;
-  }
-
-  .invite-card:active {
-    background: #d4d4d4;
   }
 
   .invite-actions {
@@ -276,27 +379,22 @@
     gap: 14px;
   }
 
-  .success-button-label {
-    position: relative;
+  .copied-check {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .success-button-text {
-    display: inline-block;
-  }
-
-  .success-icon-check {
-    position: absolute;
-    right: 100%;
-    top: 50%;
     color: #ffffff;
-    margin-right: 4px;
-    font-size: 14px;
-    line-height: 1;
+    font-size: 16px;
     font-weight: 700;
-    transform: translateY(-50%);
+    line-height: 1;
+  }
+
+  .copied-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #ffffff;
   }
 
   @keyframes spin {

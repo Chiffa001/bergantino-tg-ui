@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Typography } from '@chiffa001/tg-svelte-ui';
 
-  import { createWorkspaceDetailQuery } from '@/api/workspaces/queries';
+  import { createWorkspaceBillingQuery, createWorkspaceDetailQuery } from '@/api/workspaces/queries';
   import {
     WORKSPACE_PLAN_LABELS,
     WORKSPACE_ROLE,
@@ -20,6 +20,7 @@
   import { formatFeeRate } from '@/lib/format-fee-rate';
   import { router } from '@/lib/router';
   import { setStoredWorkspaceSlug } from '@/lib/workspace-context';
+  import { hasReachedMembersLimit } from '@/lib/workspace-invite-limits';
 
   type Props = {
     id: string;
@@ -27,8 +28,12 @@
 
   const props: Props = $props();
   const query = createWorkspaceDetailQuery(() => props.id);
+  const billingQuery = createWorkspaceBillingQuery(() => props.id);
   const currentUser = authStore.getUser();
   const canManageWorkspace = currentUser?.is_super_admin ?? false;
+  const inviteLimitReached = $derived(
+    hasReachedMembersLimit(billingQuery.data?.limits_usage.members),
+  );
 
   const roleCards = $derived.by(() => {
     const data = query.data;
@@ -37,7 +42,19 @@
       return [];
     }
 
-    return [
+    const cards = [];
+
+    if (currentUser?.is_super_admin) {
+      cards.push({
+        color: '#4f46e5',
+        count: data.members_count.workspace_admin,
+        initials: 'AD',
+        label: 'Администраторы',
+        key: WORKSPACE_ROLE.WORKSPACE_ADMIN,
+      });
+    }
+
+    cards.push(
       {
         color: '#f59e0b',
         count: data.members_count.assistant,
@@ -52,7 +69,9 @@
         label: 'Клиенты',
         key: WORKSPACE_ROLE.CLIENT,
       },
-    ];
+    );
+
+    return cards;
   });
 
   const infoRows = $derived.by(() => {
@@ -104,14 +123,31 @@
     router.navigate(`/workspaces/${props.id}/users${suffix}`);
   }
 
-  const actionItems: { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void }[] =
-    canManageWorkspace
-      ? [
-        { label: 'Настройки пространства', icon: 'settings', onclick: () => router.navigate(`/workspaces/${props.id}/settings`) },
-        { label: 'Оплата и тариф', icon: 'payment', onclick: () => router.navigate(`/workspaces/${props.id}/billing`) },
-        { label: 'Пригласить участника', icon: 'invite', onclick: () => router.navigate(`/workspaces/${props.id}/users`) },
-      ]
-      : [];
+  const actionItems = $derived.by<
+    { label: string; icon: 'settings' | 'payment' | 'invite'; onclick: () => void; disabled?: boolean; description?: string }[]
+  >(() => {
+    if (!canManageWorkspace) {
+      return [];
+    }
+
+    return [
+      { label: 'Настройки пространства', icon: 'settings', onclick: () => router.navigate(`/workspaces/${props.id}/settings`) },
+      { label: 'Оплата и тариф', icon: 'payment', onclick: () => router.navigate(`/workspaces/${props.id}/billing`) },
+      {
+        label: 'Пригласить участника',
+        icon: 'invite',
+        onclick: () => {
+          if (inviteLimitReached) {
+            return;
+          }
+
+          router.navigate(`/workspaces/${props.id}/users`);
+        },
+        disabled: inviteLimitReached,
+        description: inviteLimitReached ? 'Достигнут лимит участников' : undefined,
+      },
+    ];
+  });
 
   const data = $derived(query.data as WorkspaceDetail | undefined);
 
@@ -269,7 +305,7 @@
             onitemclick={(item) => item.onclick()}
           >
             {#snippet children(item)}
-              <div class="action-row-content">
+              <div class={`action-row-content ${item.disabled ? 'action-row-content--disabled' : ''}`.trim()}>
                 <div class="action-left">
                   <span
                     class="action-icon"
@@ -284,20 +320,33 @@
                     {/if}
                   </span>
 
-                  <Typography
-                    variant="body"
-                    color="#171717"
-                  >
-                    {item.label}
-                  </Typography>
+                  <div class="action-copy">
+                    <Typography
+                      variant="body"
+                      color="#171717"
+                    >
+                      {item.label}
+                    </Typography>
+
+                    {#if item.description}
+                      <Typography
+                        variant="caption"
+                        color="#737373"
+                      >
+                        {item.description}
+                      </Typography>
+                    {/if}
+                  </div>
                 </div>
 
-                <span
-                  class="action-arrow"
-                  aria-hidden="true"
-                >
-                  <ChevronRightIcon />
-                </span>
+                {#if !item.disabled}
+                  <span
+                    class="action-arrow"
+                    aria-hidden="true"
+                  >
+                    <ChevronRightIcon />
+                  </span>
+                {/if}
               </div>
             {/snippet}
           </RelatedList>
@@ -475,6 +524,22 @@
     min-width: 0;
     align-items: center;
     gap: 10px;
+  }
+
+  .action-copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .action-copy :global(p) {
+    margin: 0;
+  }
+
+  .action-row-content--disabled {
+    opacity: 0.6;
   }
 
   .action-icon,

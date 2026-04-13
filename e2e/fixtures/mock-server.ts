@@ -199,7 +199,16 @@ export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}
 
     // POST /workspaces/:id/invites
     if (method === 'POST' && /^\/workspaces\/[^/]+\/invites$/.test(path)) {
-      return json(route, data.workspaceInviteLink, 201);
+      const body = route.request().postDataJSON() as { role?: string } | null;
+
+      return json(
+        route,
+        {
+          ...data.workspaceInviteLink,
+          role: body?.role ?? data.workspaceInviteLink.role,
+        },
+        201,
+      );
     }
 
     // GET /workspaces/:id

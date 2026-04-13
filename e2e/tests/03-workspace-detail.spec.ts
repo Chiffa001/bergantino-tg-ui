@@ -33,6 +33,35 @@ test('показывает действия для super admin', async ({ page, 
   await saveScreenshot(page, '03-workspace-detail-actions');
 });
 
+test.describe('при достигнутом лимите участников', () => {
+  test.use({
+    apiOverrides: {
+      workspaceBilling: {
+        plan: 'free',
+        subscription: null,
+        limits_usage: {
+          members: {
+            current: 5,
+            max: 5,
+          },
+          projects: {
+            current: 1,
+            max: 1,
+          },
+        },
+        recent_payments: [],
+      },
+    },
+  });
+
+  test('показывает недоступность приглашения при достигнутом лимите участников', async ({ page, navigate }) => {
+    await navigate('/workspaces/1');
+
+    await expect(page.getByText('Пригласить участника')).toBeVisible();
+    await expect(page.getByText('Достигнут лимит участников')).toBeVisible();
+  });
+});
+
 test('переходит к настройкам по кнопке', async ({ page, navigate }) => {
   await navigate('/workspaces/1');
 
