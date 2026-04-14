@@ -1,23 +1,29 @@
 import type { Page, Route } from '@playwright/test';
 
+import type { AcceptInviteResponse, InviteDetail } from '../../src/api/invites/types';
 import type {
   Workspace,
   WorkspaceBilling,
   WorkspaceBillingPeriod,
   WorkspaceBillingPlan,
   WorkspaceDetail,
+  WorkspaceInvite,
   WorkspacePlan,
+  WorkspaceUser,
 } from '../../src/api/workspaces/types';
 import { API_DATA } from './api-data';
 
 type ApiDataOverrides = {
   auth?: typeof API_DATA.auth;
-  workspaces?: typeof API_DATA.workspaces;
-  workspaceDetail?: typeof API_DATA.workspaceDetail | null;
-  workspaceBilling?: typeof API_DATA.workspaceBilling | null;
-  workspaceBillingPlans?: typeof API_DATA.workspaceBillingPlans;
-  workspaceUsers?: typeof API_DATA.workspaceUsers;
-  invite?: typeof API_DATA.invite | null;
+  workspaces?: Workspace[];
+  workspaceDetail?: WorkspaceDetail | null;
+  workspaceBilling?: WorkspaceBilling | null;
+  workspaceBillingPlans?: WorkspaceBillingPlan[];
+  workspaceUsers?: WorkspaceUser[];
+  invite?: InviteDetail | null;
+  acceptInvite?: AcceptInviteResponse;
+  createdWorkspace?: Workspace;
+  workspaceInviteLink?: WorkspaceInvite;
 };
 
 function json(route: Route, body: unknown, status = 200) {

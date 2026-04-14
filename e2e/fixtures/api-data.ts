@@ -60,6 +60,7 @@ export const API_DATA = {
       workspace_admin: 2,
     },
     bot_username: null,
+    mini_app_url: null,
   },
 
   workspaceDetailWithBot: {
@@ -77,6 +78,7 @@ export const API_DATA = {
       workspace_admin: 1,
     },
     bot_username: 'team_alpha_bot',
+    mini_app_url: 'https://t.me/team_alpha_bot/team_alpha',
   },
 
   workspaceBilling: {

@@ -126,6 +126,7 @@ test.describe('при достигнутом лимите участников',
     apiOverrides: {
       workspaceBilling: {
         plan: 'free',
+        fee_rate: '0',
         subscription: null,
         limits_usage: {
           members: {
