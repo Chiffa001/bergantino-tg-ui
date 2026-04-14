@@ -33,6 +33,20 @@ test('показывает действия для super admin', async ({ page, 
   await saveScreenshot(page, '03-workspace-detail-actions');
 });
 
+test('показывает navbar c активной вкладкой "О пространстве"', async ({ page, navigate }) => {
+  await navigate('/workspaces/1');
+
+  const navBar = page.getByLabel('Навигация по workspace');
+  const groupsTab = page.getByRole('tab', { name: 'Группы workspace' });
+  const aboutTab = page.getByRole('tab', { name: 'Информация о workspace' });
+
+  await expect(navBar).toBeVisible();
+  await expect(groupsTab).toBeVisible();
+  await expect(aboutTab).toBeVisible();
+  await expect(aboutTab).toHaveAttribute('aria-selected', 'true');
+  await expect(groupsTab).toHaveAttribute('aria-selected', 'false');
+});
+
 test.describe('при достигнутом лимите участников', () => {
   test.use({
     apiOverrides: {
@@ -81,6 +95,17 @@ test('переходит к пользователям по кнопке "Пок
 
   await page.waitForFunction(
     () => window.location.hash === '#/workspaces/1/users',
+    { timeout: 5_000 },
+  );
+});
+
+test('переходит к странице групп по navbar', async ({ page, navigate }) => {
+  await navigate('/workspaces/1');
+
+  await page.getByRole('tab', { name: 'Группы workspace' }).click();
+
+  await page.waitForFunction(
+    () => window.location.hash === '#/workspaces/1/groups',
     { timeout: 5_000 },
   );
 });

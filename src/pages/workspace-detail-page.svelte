@@ -358,6 +358,7 @@
 
 <style>
   .workspace-detail-page {
+    --workspace-bottom-nav-space: calc(96px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex: 1;
     flex-direction: column;
@@ -365,7 +366,7 @@
     height: 100%;
     box-sizing: border-box;
     gap: 10px;
-    padding: 14px 8px 20px;
+    padding: 14px 8px 10px;
     background: #fafafa;
   }
 
@@ -376,7 +377,7 @@
     flex-direction: column;
     gap: 16px;
     overflow: auto;
-    padding: 0 8px 8px;
+    padding: 0 8px var(--workspace-bottom-nav-space);
   }
 
   .info-card {

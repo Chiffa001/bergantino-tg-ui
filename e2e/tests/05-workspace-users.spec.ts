@@ -18,6 +18,12 @@ test('показывает счётчик пользователей', async ({ 
   await expect(page.getByText('3 пользователей')).toBeVisible();
 });
 
+test('не показывает workspace navbar на странице пользователей', async ({ page, navigate }) => {
+  await navigate('/workspaces/1/users');
+
+  await expect(page.getByLabel('Навигация по workspace')).toHaveCount(0);
+});
+
 test('поиск фильтрует список', async ({ page, navigate }) => {
   // The search debounces via setTimeout(300). We mock the API to return only
   // the filtered result so we don't need to wait for debounce + network.

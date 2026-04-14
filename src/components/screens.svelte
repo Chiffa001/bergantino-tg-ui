@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Route, Switch } from '@chiffa001/tg-svelte-ui/router';
 
+  import WorkspaceBottomNavHost from '@/components/workspaces/workspace-bottom-nav-host.svelte';
   import CreateWorkspacePage from '@/pages/create-workspace-page.svelte';
   import ForbiddenPage from '@/pages/forbidden-page.svelte';
   import InternalServerErrorPage from '@/pages/internal-server-error-page.svelte';
@@ -10,6 +11,7 @@
   import WorkspaceBillingPage from '@/pages/workspace-billing-page.svelte';
   import WorkspaceChangePlanPage from '@/pages/workspace-change-plan-page.svelte';
   import WorkspaceDetailPage from '@/pages/workspace-detail-page.svelte';
+  import WorkspaceGroupsPage from '@/pages/workspace-groups-page.svelte';
   import WorkspaceSettingsPage from '@/pages/workspace-settings-page.svelte';
   import WorkspaceUsersPage from '@/pages/workspace-users-page.svelte';
   import WorkspacesPage from '@/pages/workspaces-page.svelte';
@@ -52,6 +54,15 @@
   >
     {#snippet children({ params })}
       <WorkspaceDetailPage id={params.id} />
+    {/snippet}
+  </Route>
+
+  <Route
+    path="/workspaces/:id/groups"
+    exact
+  >
+    {#snippet children({ params })}
+      <WorkspaceGroupsPage id={params.id} />
     {/snippet}
   </Route>
 
@@ -113,3 +124,5 @@
     <NotFoundPage />
   </Route>
 </Switch>
+
+<WorkspaceBottomNavHost />

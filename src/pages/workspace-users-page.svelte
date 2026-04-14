@@ -248,6 +248,7 @@
       isInviteModalOpen = false;
     }}
   />
+
 </section>
 
 <style>
@@ -259,7 +260,7 @@
     height: 100%;
     box-sizing: border-box;
     gap: 10px;
-    padding: 14px 8px 20px;
+    padding: 14px 8px 10px;
     background: #fafafa;
   }
 
@@ -274,7 +275,7 @@
     flex-direction: column;
     gap: 14px;
     overflow: auto;
-    padding: 0 8px 8px;
+    padding: 0 8px 0;
   }
 
   .search-box {

@@ -39,7 +39,7 @@
     "@emnapi/runtime": "^1.9.2"
   },
   "dependencies": {
-    "@chiffa001/tg-svelte-ui": "^0.0.17",
+    "@chiffa001/tg-svelte-ui": "^0.0.18",
     "@tanstack/svelte-query": "^6.1.10",
     "@tma.js/sdk-svelte": "^1.0.16"
   }

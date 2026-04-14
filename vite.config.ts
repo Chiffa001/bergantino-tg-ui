@@ -25,7 +25,7 @@ export default defineConfig(({ command, mode }) => ({
     fs: {
       allow: [
         path.resolve(import.meta.dirname),
-        path.resolve(import.meta.dirname, '../../tg-svelte-ui'),
+        path.resolve(import.meta.dirname, '../tg-svelte-ui'),
       ],
     },
   },

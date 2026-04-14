@@ -1,44 +1,29 @@
-export type WorkspaceStatus = 'active' | 'suspended' | 'archived';
-export const WORKSPACE_ROLE = {
-  ASSISTANT: 'assistant',
-  CLIENT: 'client',
-  WORKSPACE_ADMIN: 'workspace_admin',
-} as const;
+import {
+  WORKSPACE_PLAN,
+  WORKSPACE_PLAN_LABELS,
+  WORKSPACE_PLAN_OPTIONS,
+  WORKSPACE_ROLE,
+  WORKSPACE_ROLE_LABELS,
+  WORKSPACE_STATUS,
+  WORKSPACE_STATUS_LABELS,
+} from '@/constants/workspaces';
+
+export {
+  WORKSPACE_PLAN,
+  WORKSPACE_PLAN_LABELS,
+  WORKSPACE_PLAN_OPTIONS,
+  WORKSPACE_ROLE,
+  WORKSPACE_ROLE_LABELS,
+  WORKSPACE_STATUS,
+  WORKSPACE_STATUS_LABELS,
+};
+
+export type WorkspaceStatus = (typeof WORKSPACE_STATUS)[keyof typeof WORKSPACE_STATUS];
 
 export type WorkspaceRole = (typeof WORKSPACE_ROLE)[keyof typeof WORKSPACE_ROLE];
 export type WorkspaceInviteRole = WorkspaceRole;
 
-export const WORKSPACE_ROLE_LABELS: Record<WorkspaceRole, string> = {
-  [WORKSPACE_ROLE.WORKSPACE_ADMIN]: 'Админ',
-  [WORKSPACE_ROLE.ASSISTANT]: 'Помощник',
-  [WORKSPACE_ROLE.CLIENT]: 'Клиент',
-};
-
-export const WORKSPACE_STATUS_LABELS: Record<WorkspaceStatus, string> = {
-  active: 'Active',
-  suspended: 'Suspended',
-  archived: 'Archived',
-};
-
-export const WORKSPACE_PLAN = {
-  FREE: 'free',
-  BASIC: 'basic',
-  PRO: 'pro',
-  BUSINESS: 'business',
-} as const;
-
 export type WorkspacePlan = (typeof WORKSPACE_PLAN)[keyof typeof WORKSPACE_PLAN];
-
-export const WORKSPACE_PLAN_OPTIONS: { value: WorkspacePlan; label: string }[] = [
-  { value: WORKSPACE_PLAN.FREE, label: 'Free' },
-  { value: WORKSPACE_PLAN.BASIC, label: 'Basic' },
-  { value: WORKSPACE_PLAN.PRO, label: 'Pro' },
-  { value: WORKSPACE_PLAN.BUSINESS, label: 'Business' },
-];
-
-export const WORKSPACE_PLAN_LABELS: Record<WorkspacePlan, string> = Object.fromEntries(
-  WORKSPACE_PLAN_OPTIONS.map(({ value, label }) => [value, label]),
-) as Record<WorkspacePlan, string>;
 
 // Соответствует WorkspaceOut из API (GET /workspaces)
 export type Workspace = {
