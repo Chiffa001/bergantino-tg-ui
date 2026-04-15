@@ -2,11 +2,13 @@ import type { Page, Route } from '@playwright/test';
 
 import type { AcceptInviteResponse, InviteDetail } from '../../src/api/invites/types';
 import type {
+  GroupFavoriteResponse,
   Workspace,
   WorkspaceBilling,
   WorkspaceBillingPeriod,
   WorkspaceBillingPlan,
   WorkspaceDetail,
+  WorkspaceGroup,
   WorkspaceInvite,
   WorkspacePlan,
   WorkspaceUser,
@@ -20,6 +22,7 @@ type ApiDataOverrides = {
   workspaceBilling?: WorkspaceBilling | null;
   workspaceBillingPlans?: WorkspaceBillingPlan[];
   workspaceUsers?: WorkspaceUser[];
+  workspaceGroups?: WorkspaceGroup[];
   invite?: InviteDetail | null;
   acceptInvite?: AcceptInviteResponse;
   createdWorkspace?: Workspace;
@@ -60,6 +63,7 @@ export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}
     ...plan,
     limits: { ...plan.limits },
   }));
+  let workspaceGroupsState: WorkspaceGroup[] = data.workspaceGroups.map((group) => ({ ...group }));
 
   await page.route(`${API_ORIGIN}/**`, (route) => {
     if (!isApi(route)) return route.continue();
@@ -86,6 +90,65 @@ export async function setupApiMocks(page: Page, overrides: ApiDataOverrides = {}
     // GET /workspaces/:id/users
     if (method === 'GET' && /^\/workspaces\/[^/]+\/users$/.test(path)) {
       return json(route, data.workspaceUsers);
+    }
+
+    // GET /workspaces/:id/groups
+    if (method === 'GET' && /^\/workspaces\/[^/]+\/groups$/.test(path)) {
+      return json(route, workspaceGroupsState);
+    }
+
+    // POST /workspaces/:id/groups
+    if (method === 'POST' && /^\/workspaces\/[^/]+\/groups$/.test(path)) {
+      const workspaceId = path.split('/')[2];
+      const body = route.request().postDataJSON() as {
+        title?: string;
+        description?: string | null;
+      } | null;
+
+      const createdGroup: WorkspaceGroup = {
+        id: `group-${workspaceGroupsState.length + 1}`,
+        workspace_id: workspaceId,
+        title: body?.title ?? 'Новая группа',
+        description: body?.description ?? null,
+        status: 'active',
+        is_favorite: false,
+        created_by_user_id: data.auth.user.id,
+        created_at: '2026-01-11T11:00:00Z',
+      };
+
+      workspaceGroupsState = [createdGroup, ...workspaceGroupsState];
+
+      return json(route, createdGroup, 201);
+    }
+
+    // POST /groups/:id/favorite
+    if (method === 'POST' && /^\/groups\/[^/]+\/favorite$/.test(path)) {
+      const groupId = path.split('/')[2];
+      workspaceGroupsState = workspaceGroupsState.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              is_favorite: true,
+            }
+          : group,
+      );
+
+      return json(route, { is_favorite: true } satisfies GroupFavoriteResponse);
+    }
+
+    // DELETE /groups/:id/favorite
+    if (method === 'DELETE' && /^\/groups\/[^/]+\/favorite$/.test(path)) {
+      const groupId = path.split('/')[2];
+      workspaceGroupsState = workspaceGroupsState.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              is_favorite: false,
+            }
+          : group,
+      );
+
+      return json(route, { is_favorite: false } satisfies GroupFavoriteResponse);
     }
 
     // GET /workspaces/:id/billing

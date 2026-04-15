@@ -34,13 +34,13 @@
 
     const [workspace] = query.data;
     setStoredWorkspaceSlug(workspace.slug);
-    router.navigate(`/workspaces/${workspace.id}`, { replace: true });
+    router.navigate(`/workspaces/${workspace.id}/groups`, { replace: true });
   });
 
   const handleCreate = () => router.navigate('/workspaces/new');
   const handleCard = (id: string, slug: string) => {
     setStoredWorkspaceSlug(slug);
-    router.navigate(`/workspaces/${id}`);
+    router.navigate(`/workspaces/${id}/groups`);
   };
 </script>
 

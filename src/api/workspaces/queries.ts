@@ -5,16 +5,21 @@ import { queryClient } from '@/lib/query-client';
 import {
   adminOverrideWorkspaceBillingPlan,
   createWorkspace,
+  createWorkspaceGroup,
   createWorkspaceInvite,
+  favoriteGroup,
   getWorkspaceBilling,
   getWorkspaceBillingPlans,
   getWorkspaceDetail,
+  getWorkspaceGroups,
   getWorkspaces,
   getWorkspaceUsers,
+  unfavoriteGroup,
   updateWorkspace,
 } from './requests';
 import type {
   AdminWorkspaceBillingPlanRequest,
+  CreateWorkspaceGroupRequest,
   CreateWorkspaceInviteRequest,
   UpdateWorkspaceRequest,
   WorkspaceUsersFilters,
@@ -24,6 +29,7 @@ export const workspacesQueryKey = ['workspaces'] as const;
 export const workspaceDetailQueryKey = (id: string) => ['workspace', id] as const;
 export const workspaceBillingQueryKey = (id: string) => ['workspaces', id, 'billing'] as const;
 export const workspaceBillingPlansQueryKey = (id: string) => ['workspaces', id, 'billing', 'plans'] as const;
+export const workspaceGroupsQueryKey = (id: string) => ['workspaces', id, 'groups'] as const;
 export const workspaceUsersQueryKey = (id: string, filters: WorkspaceUsersFilters) =>
   ['workspaces', id, 'users', filters] as const;
 
@@ -49,6 +55,31 @@ export const createWorkspaceUsersQuery = (
     queryFn: () => getWorkspaceUsers(id(), filters()),
     queryKey: workspaceUsersQueryKey(id(), filters()),
     staleTime: 30_000,
+  }));
+
+export const createWorkspaceGroupsQuery = (id: () => string) =>
+  createQuery(() => ({
+    queryFn: () => getWorkspaceGroups(id()),
+    queryKey: workspaceGroupsQueryKey(id()),
+    staleTime: 30_000,
+  }));
+
+export const createFavoriteGroupMutation = () =>
+  createMutation(() => ({
+    mutationFn: (groupId: string) => favoriteGroup(groupId),
+  }));
+
+export const createUnfavoriteGroupMutation = () =>
+  createMutation(() => ({
+    mutationFn: (groupId: string) => unfavoriteGroup(groupId),
+  }));
+
+export const createWorkspaceGroupMutation = (id: () => string) =>
+  createMutation(() => ({
+    mutationFn: (data: CreateWorkspaceGroupRequest) => createWorkspaceGroup(id(), data),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: workspaceGroupsQueryKey(id()) });
+    },
   }));
 
 export const createWorkspaceBillingQuery = (id: () => string) =>

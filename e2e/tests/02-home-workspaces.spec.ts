@@ -47,7 +47,7 @@ test('навигация к воркспейсу по клику', async ({ page
   await page.getByText('My Workspace').click();
 
   await page.waitForFunction(
-    () => window.location.hash === '#/workspaces/1',
+    () => window.location.hash === '#/workspaces/1/groups',
     { timeout: 5_000 },
   );
 });
