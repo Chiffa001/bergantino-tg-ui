@@ -9,6 +9,7 @@
   import NavGroupsIcon from '@/shared/icons/nav-groups-icon.svelte';
   import NavInfoIcon from '@/shared/icons/nav-info-icon.svelte';
   import { router } from '@/shared/lib/router';
+  import { triggerSelectionHaptic } from '@/shared/lib/tma';
 
   type Props = {
     workspaceId: string;
@@ -43,6 +44,7 @@
       return;
     }
 
+    triggerSelectionHaptic();
     optimisticSection = id as WorkspaceBottomNavSection;
     clearTimeout(navigationTimeout);
     navigationTimeout = setTimeout(() => {

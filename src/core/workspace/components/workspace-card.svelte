@@ -3,6 +3,7 @@
 
   import { type Workspace,WORKSPACE_PLAN_LABELS, WORKSPACE_STATUS_LABELS } from '@/core/workspace/model/types';
   import { formatDate } from '@/shared/lib/format-date';
+  import { triggerSelectionHaptic } from '@/shared/lib/tma';
 
   type Props = {
     workspace: Workspace;
@@ -10,11 +11,16 @@
   };
 
   const { workspace, onclick }: Props = $props();
+
+  function handleClick() {
+    triggerSelectionHaptic();
+    onclick();
+  }
 </script>
 
 <button
   class="workspace-card"
-  {onclick}
+  onclick={handleClick}
 >
   <div class="card-row card-row--title">
     <Typography

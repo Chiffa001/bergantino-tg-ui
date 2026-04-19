@@ -17,7 +17,24 @@ const mocks = vi.hoisted(() => ({
   viewportMount: vi.fn(),
   viewportBindCssVars: vi.fn(),
   viewportCssCleanup: vi.fn(),
+  selectionChanged: vi.fn(),
+  impactOccurred: vi.fn(),
 }));
+
+type TestTelegramGlobal = typeof globalThis & {
+  Telegram?: {
+    WebApp?: {
+      HapticFeedback?: {
+        impactOccurred?: (style: 'light' | 'medium' | 'heavy' | 'rigid' | 'soft') => void;
+        selectionChanged?: () => void;
+      };
+    };
+  };
+};
+
+function getTelegramGlobal(): TestTelegramGlobal {
+  return globalThis as TestTelegramGlobal;
+}
 
 vi.mock('@tma.js/sdk-svelte', () => ({
   init: mocks.init,
@@ -42,10 +59,19 @@ vi.mock('@tma.js/sdk-svelte', () => ({
 }));
 
 import { getTelegramHash, setupTelegramSdk } from '../tma';
+import { triggerImpactHaptic, triggerSelectionHaptic } from '../tma';
 
 describe('setupTelegramSdk', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getTelegramGlobal().Telegram = {
+      WebApp: {
+        HapticFeedback: {
+          impactOccurred: mocks.impactOccurred,
+          selectionChanged: mocks.selectionChanged,
+        },
+      },
+    };
 
     mocks.init.mockReturnValue(mocks.sdkCleanup);
     mocks.retrieveRawInitData.mockReturnValue('tg-hash');
@@ -105,5 +131,26 @@ describe('setupTelegramSdk', () => {
     expect(mocks.themeMount).not.toHaveBeenCalled();
     expect(mocks.miniAppMount).not.toHaveBeenCalled();
     expect(mocks.viewportMount).not.toHaveBeenCalled();
+  });
+
+  it('triggers selection haptic when Telegram WebApp is available', () => {
+    triggerSelectionHaptic();
+
+    expect(mocks.selectionChanged).toHaveBeenCalledOnce();
+  });
+
+  it('triggers impact haptic with provided style when Telegram WebApp is available', () => {
+    triggerImpactHaptic('medium');
+
+    expect(mocks.impactOccurred).toHaveBeenCalledWith('medium');
+  });
+
+  it('does nothing for haptics outside Telegram', () => {
+    delete getTelegramGlobal().Telegram;
+
+    expect(() => {
+      triggerSelectionHaptic();
+      triggerImpactHaptic();
+    }).not.toThrow();
   });
 });

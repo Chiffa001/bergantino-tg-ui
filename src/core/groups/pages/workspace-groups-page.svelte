@@ -16,6 +16,7 @@
   import PageHeader from '@/shared/components/ui/page-header.svelte';
   import PlusIcon from '@/shared/icons/plus-icon.svelte';
   import SearchIcon from '@/shared/icons/search-icon.svelte';
+  import { triggerImpactHaptic } from '@/shared/lib/tma';
 
   type Props = {
     id: string;
@@ -35,6 +36,11 @@
 
   function getStatusLabel(status: WorkspaceGroup['status']) {
     return WORKSPACE_GROUP_STATUS_LABELS[status];
+  }
+
+  function handleFavoriteClick(group: WorkspaceGroup) {
+    triggerImpactHaptic();
+    void model.handleFavoriteToggle(group);
   }
 </script>
 
@@ -163,7 +169,7 @@
                     class={`group-card__star ${group.is_favorite ? 'group-card__star--favorite' : ''}`.trim()}
                     type="button"
                     aria-label={group.is_favorite ? `Убрать ${group.title} из избранного` : `Добавить ${group.title} в избранное`}
-                    onclick={() => void model.handleFavoriteToggle(group)}
+                    onclick={() => handleFavoriteClick(group)}
                   >
                     {group.is_favorite ? '★' : '☆'}
                   </button>

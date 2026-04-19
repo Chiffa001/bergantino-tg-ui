@@ -13,6 +13,7 @@
   import QueryErrorState from '@/shared/components/error/query-error-state.svelte';
   import PageHeader from '@/shared/components/ui/page-header.svelte';
   import { router } from '@/shared/lib/router';
+  import { triggerImpactHaptic } from '@/shared/lib/tma';
 
   type Props = {
     id: string;
@@ -50,6 +51,8 @@
     if (!canChangePlan || plan === currentPlan || mutation.isPending) {
       return;
     }
+
+    triggerImpactHaptic('medium');
 
     try {
       await mutation.mutateAsync({ plan, billing_period: 'monthly' });

@@ -3,6 +3,7 @@
   import type { Snippet } from 'svelte';
 
   import ChevronLeftIcon from '@/shared/icons/chevron-left-icon.svelte';
+  import { triggerSelectionHaptic } from '@/shared/lib/tma';
 
   type Props = {
     title: string;
@@ -11,12 +12,17 @@
   };
 
   const { title, onback, actions }: Props = $props();
+
+  function handleBackClick() {
+    triggerSelectionHaptic();
+    onback();
+  }
 </script>
 
 <header class="page-header">
   <button
     class="back-button"
-    onclick={onback}
+    onclick={handleBackClick}
     aria-label="Назад"
   >
     <ChevronLeftIcon />

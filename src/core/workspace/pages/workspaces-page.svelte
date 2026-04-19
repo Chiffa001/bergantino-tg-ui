@@ -7,6 +7,7 @@
   import { type WorkspaceStatus } from '@/core/workspace/model/types';
   import Button from '@/shared/components/ui/button.svelte';
   import { router } from '@/shared/lib/router';
+  import { triggerImpactHaptic, triggerSelectionHaptic } from '@/shared/lib/tma';
 
   type Filter = 'all' | WorkspaceStatus;
 
@@ -37,7 +38,20 @@
     router.navigate(`/workspaces/${workspace.id}/groups`, { replace: true });
   });
 
-  const handleCreate = () => router.navigate('/workspaces/new');
+  const handleCreate = () => {
+    triggerImpactHaptic();
+    router.navigate('/workspaces/new');
+  };
+
+  const handleFilterChange = (filter: Filter) => {
+    if (activeFilter === filter) {
+      return;
+    }
+
+    triggerSelectionHaptic();
+    activeFilter = filter;
+  };
+
   const handleCard = (id: string, slug: string) => {
     setStoredWorkspaceSlug(slug);
     router.navigate(`/workspaces/${id}/groups`);
@@ -70,7 +84,7 @@
       <Button
         variant={activeFilter === filter.value ? 'default' : 'secondary'}
         class={`filter-chip ${activeFilter === filter.value ? 'filter-chip--active' : ''}`.trim()}
-        onclick={() => (activeFilter = filter.value)}
+        onclick={() => handleFilterChange(filter.value)}
       >
         {filter.label}
       </Button>
