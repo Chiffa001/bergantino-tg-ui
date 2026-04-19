@@ -1,18 +1,17 @@
 import type { Page, Route } from '@playwright/test';
 
-import type { AcceptInviteResponse, InviteDetail } from '../../src/api/invites/types';
+import type { GroupFavoriteResponse, WorkspaceGroup } from '../../src/core/groups/model/types';
+import type { AcceptInviteResponse, InviteDetail } from '../../src/core/invites/model/types';
 import type {
-  GroupFavoriteResponse,
   Workspace,
   WorkspaceBilling,
   WorkspaceBillingPeriod,
   WorkspaceBillingPlan,
   WorkspaceDetail,
-  WorkspaceGroup,
   WorkspaceInvite,
   WorkspacePlan,
   WorkspaceUser,
-} from '../../src/api/workspaces/types';
+} from '../../src/core/workspace/model/types';
 import { API_DATA } from './api-data';
 
 type ApiDataOverrides = {
